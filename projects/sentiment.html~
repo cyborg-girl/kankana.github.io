@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentiment Analyzer | My Portfolio</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 50px 20px;
+    }
+    h1, h2 { text-align: center; margin-bottom: 20px; }
+    .demo-container { max-width: 600px; margin: 0 auto; text-align: center; }
+    textarea { width: 100%; padding: 10px; font-size: 1em; border-radius: 5px; border: none; margin-bottom: 15px; }
+    button { padding: 10px 20px; font-size: 1em; border-radius: 5px; border: none; background-color: #4CAF50; color: white; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    #result { margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>AI Project Demo</h1>
+  <h2>Sentiment Analyzer</h2>
+
+  <div class="demo-container">
+    <p>Type some text and click "Analyze Sentiment":</p>
+    <textarea id="text-input" rows="4" placeholder="Type your text here..."></textarea>
+    <br>
+    <button id="analyze-btn">Analyze Sentiment</button>
+    <p id="result">⏳ Loading model...</p>
+  </div>
+
+  <!-- Load transformers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js"></script>
+  <script>
+    const { pipeline } = window.transformers;
+
+    let sentimentPipeline = null;
+
+    async function loadModel() {
+      try {
+        console.log("Loading model...");
+        sentimentPipeline = await pipeline(
+          "sentiment-analysis",
+          "Xenova/distilbert-base-uncased-finetuned-sst-2-english"
+        );
+        document.getElementById("result").innerText = "✅ Model loaded! Enter text above.";
+        console.log("Model loaded successfully");
+      } catch (err) {
+        console.error("Error loading model:", err);
+        document.getElementById("result").innerText = "❌ Failed to load model. Check console.";
+      }
+    }
+
+    loadModel();
+
+    document.getElementById("analyze-btn").onclick = async () => {
+      const text = document.getElementById("text-input").value.trim();
+      if (!text) {
+        document.getElementById("result").innerText = "⚠️ Please type some text!";
+        return;
+      }
+      if (!sentimentPipeline) {
+        document.getElementById("result").innerText = "⏳ Model not loaded yet...";
+        return;
+      }
+
+      document.getElementById("result").innerText = "🔍 Analyzing...";
+
+      try {
+        const output = await sentimentPipeline(text);
+        console.log("Pipeline output:", output);
+        const label = output[0].label;
+        const score = (output[0].score * 100).toFixed(1);
+        document.getElementById("result").innerText = `Result: ${label} (${score}%)`;
+      } catch (err) {
+        console.error("Error running inference:", err);
+        document.getElementById("result").innerText = "❌ Error analyzing text.";
+      }
+    };
+  </script>
+
+</body>
+</html>
+
