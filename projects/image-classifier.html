@@ -1,301 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Image Classifier — AI Portfolio</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+---
+layout: default
+title: Image Classifier
+---
 
-  <!-- Link portfolio CSS (change to include baseurl if needed) -->
-  <!-- If your site uses a baseurl (project site), change href to "{{ site.baseurl }}/assets/css/main.css" in your Jekyll page -->
-  <link rel="stylesheet" href="/assets/css/main.css">
+<div id="particles-js"></div>
 
-  <style>
-    /* Page-level overrides to match your theme */
-    :root{
-      --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent: #4cc9f0;
-      --muted:#bfc9d9;
-    }
-    html,body{height:100%; margin:0; background:var(--bg); color:#fff; font-family: "Inter", "Helvetica Neue", Arial, sans-serif;}
-    #particles-js{ position:fixed; inset:0; z-index:-1; }
-    .wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:48px 20px; box-sizing:border-box; }
-    .card{ width:100%; max-width:1000px; background:var(--card); border-radius:16px; padding:28px; box-shadow:0 12px 40px rgba(0,0,0,0.6); display:grid; gap:18px; grid-template-columns: 420px 1fr; align-items:start; }
-    .left{ display:flex; flex-direction:column; gap:12px; align-items:center; }
-    .preview{
-      width:360px; height:360px; border-radius:12px; background:#111; display:flex; align-items:center; justify-content:center; overflow:hidden;
-      box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
-    }
-    .preview img, .preview video{ width:100%; height:100%; object-fit:cover; display:block; }
-    .controls{ width:100%; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-    .btn{ background:linear-gradient(135deg,var(--accent),#4895ef); color:#0b1020; padding:10px 14px; border-radius:10px; font-weight:700; border:none; cursor:pointer; }
-    .btn.ghost{ background:transparent; color:var(--accent); border:1px solid rgba(255,255,255,0.06); }
-    .btn.warn{ background: #ef476f; color:#fff; }
-    .right{ padding-left:12px; }
-    h1{ margin:0 0 6px; color:var(--accent); font-size:1.6rem; }
-    p.lead{ margin:0 0 12px; color:var(--muted); max-width:700px; }
-    .results{ background:rgba(0,0,0,0.12); padding:12px; border-radius:10px; }
-    .result-item{ display:flex; justify-content:space-between; gap:12px; padding:8px 6px; align-items:center; border-bottom:1px dashed rgba(255,255,255,0.04); }
-    .result-item:last-child{ border-bottom:none; }
-    .confidence{ font-weight:700; color:#dff7ff; }
-    .status{ margin-top:10px; color:var(--muted); font-size:0.95rem; }
-    .small{ font-size:0.9rem; color:var(--muted); }
+<section class="project-section fade-in-up">
+  <div class="project-card">
+    <h1 class="title">🖼️ Image Classifier</h1>
+    <p class="subtitle">Upload an image and the AI will predict what it is 🚀</p>
 
-    /* Responsive */
-    @media (max-width:980px){
-      .card{ grid-template-columns: 1fr; }
-      .preview{ width:100%; height:320px; }
-    }
-  </style>
-</head>
-<body>
-  <div id="particles-js"></div>
-
-  <div class="wrap">
-    <div class="card" role="main" aria-label="Image classifier demo">
-      <div class="left">
-        <div class="preview" id="preview">
-          <div class="small" id="placeholder">No image — upload or use webcam</div>
-        </div>
-
-        <div class="controls" aria-hidden="false">
-          <label class="btn ghost" id="uploadLabel">
-            Upload Image
-            <input id="image-upload" type="file" accept="image/*" style="display:none">
-          </label>
-
-          <button id="toggle-webcam" class="btn ghost">Use Webcam</button>
-          <button id="capture" class="btn ghost" disabled>Capture</button>
-          <button id="clear" class="btn" title="Clear image">Clear</button>
-        </div>
-
-        <div class="status small" id="status">Status: <span id="status-text">Loading model...</span></div>
-      </div>
-
-      <div class="right">
-        <h1>📷 Browser Image Classifier</h1>
-        <p class="lead">Try this demo locally in the browser — it uses <strong>MobileNet</strong> (TensorFlow.js) to classify images. Upload a photo or use your webcam, then click <strong>Classify</strong>.</p>
-
-        <div style="display:flex; gap:10px; margin-bottom:12px; align-items:center;">
-          <button id="classify" class="btn" title="Run classification">Classify</button>
-          <button id="top-5" class="btn ghost">Show Top 5</button>
-          <button id="top-1" class="btn ghost">Top 1</button>
-        </div>
-
-        <div class="results" id="results" aria-live="polite">
-          <div class="small">Predictions will appear here</div>
-        </div>
-
-        <div style="margin-top:18px" class="small">
-          Note: first load downloads the model into the browser (cached). First-time load may take ~8–30s depending on connection.
-        </div>
-      </div>
+    <div class="upload-section">
+      <input type="file" id="imageUpload" accept="image/*" class="input-file" />
+      <button id="classifyBtn" class="btn" disabled>🔍 Classify Image</button>
     </div>
+
+    <div class="preview">
+      <img id="previewImage" src="" alt="Your image will appear here" />
+    </div>
+
+    <div id="result" class="result-card"></div>
   </div>
+</section>
 
-  <!-- Particles -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script>
-    particlesJS("particles-js", {
-      particles: {
-        number: { value: 70 },
-        size: { value: 3 },
-        move: { speed: 1 },
-        line_linked: { enable: true, distance: 140, color: "#4cc9f0" },
-        color: { value: "#4cc9f0" }
-      },
-      interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
-    });
-  </script>
+<!-- TensorFlow.js -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
 
-  <!-- TensorFlow.js + MobileNet -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+<script>
+let model;
 
-  <script>
-    // DOM refs
-    const statusText = document.getElementById('status-text');
-    const preview = document.getElementById('preview');
-    const placeholder = document.getElementById('placeholder');
-    const uploadInput = document.getElementById('image-upload');
-    const uploadLabel = document.getElementById('uploadLabel');
-    const toggleWebcamBtn = document.getElementById('toggle-webcam');
-    const captureBtn = document.getElementById('capture');
-    const clearBtn = document.getElementById('clear');
-    const classifyBtn = document.getElementById('classify');
-    const resultsEl = document.getElementById('results');
-    const top5Btn = document.getElementById('top-5');
-    const top1Btn = document.getElementById('top-1');
+async function loadModel() {
+  model = await mobilenet.load();
+  document.getElementById("classifyBtn").disabled = false;
+}
+loadModel();
 
-    let model = null;
-    let currentImageEl = null; // <img> or <video> element in preview
-    let videoStream = null;
-    let showTop = 3;
+document.getElementById("imageUpload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      document.getElementById("previewImage").src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
 
-    // Load model
-    async function loadModel() {
-      try {
-        statusText.textContent = 'Loading MobileNet model...';
-        model = await mobilenet.load({ version: 2, alpha: 1.0 }); // alpha 1.0 = full model; change to 0.25/0.5 for smaller
-        statusText.textContent = 'Model loaded ✅';
-      } catch (err) {
-        console.error(err);
-        statusText.textContent = 'Failed to load model — check console';
-      }
-    }
-    loadModel();
+document.getElementById("classifyBtn").addEventListener("click", async () => {
+  const img = document.getElementById("previewImage");
+  if (!img.src) {
+    alert("Please upload an image first.");
+    return;
+  }
+  document.getElementById("result").innerHTML = "⏳ Analyzing...";
+  const predictions = await model.classify(img);
+  let output = "<h2>Results:</h2><ul>";
+  predictions.forEach(p => {
+    output += `<li><strong>${p.className}</strong> — ${(p.probability * 100).toFixed(2)}%</li>`;
+  });
+  output += "</ul>";
+  document.getElementById("result").innerHTML = output;
+});
+</script>
 
-    // Helpers: show image or video in preview
-    function showImageElement(el) {
-      // remove previous
-      preview.innerHTML = '';
-      preview.appendChild(el);
-      currentImageEl = el;
-    }
+<style>
+/* Section wrapper */
+.project-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
 
-    function createImgFromFile(file) {
-      const img = document.createElement('img');
-      img.alt = file.name;
-      img.loading = 'eager';
-      img.className = 'preview-img';
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.src = URL.createObjectURL(file);
-      img.onload = () => URL.revokeObjectURL(img.src);
-      return img;
-    }
+/* Card container */
+.project-card {
+  background: rgba(18, 18, 18, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+  padding: 40px;
+  max-width: 850px;
+  width: 100%;
+  color: #f5f5f5;
+  text-align: center;
+}
 
-    // Upload
-    uploadInput.addEventListener('change', (e) => {
-      const f = e.target.files?.[0];
-      if (!f) return;
-      stopWebcam();
-      const img = createImgFromFile(f);
-      showImageElement(img);
-      placeholder && placeholder.remove();
-    });
+/* Headings */
+.title {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #4cc9f0;
+}
+.subtitle {
+  font-size: 1.2rem;
+  color: #ddd;
+  margin-bottom: 30px;
+}
 
-    // Webcam
-    toggleWebcamBtn.addEventListener('click', async () => {
-      if (videoStream) {
-        stopWebcam();
-        toggleWebcamBtn.textContent = 'Use Webcam';
-        captureBtn.disabled = true;
-        return;
-      }
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-        const video = document.createElement('video');
-        video.autoplay = true;
-        video.muted = true;
-        video.playsInline = true;
-        video.srcObject = videoStream;
-        // ensure play
-        await video.play().catch(()=>{});
-        showImageElement(video);
-        toggleWebcamBtn.textContent = 'Stop Webcam';
-        captureBtn.disabled = false;
-        placeholder && placeholder.remove();
-      } catch (err) {
-        console.error('Webcam error', err);
-        alert('Could not start webcam. Make sure the browser has permission and your connection is secure (https).');
-      }
-    });
+/* File input */
+.input-file {
+  margin: 15px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1d1d1d;
+  color: #f5f5f5;
+  cursor: pointer;
+}
 
-    function stopWebcam() {
-      if (videoStream) {
-        videoStream.getTracks().forEach(t => t.stop());
-        videoStream = null;
-      }
-      // remove video element if present
-      if (currentImageEl && currentImageEl.tagName === 'VIDEO') {
-        currentImageEl.pause && currentImageEl.pause();
-      }
-    }
+/* Button */
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 12px 26px;
+  border-radius: 12px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #4cc9f0, #4895ef);
+  color: #121212;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+  border: none;
+}
+.btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #4895ef, #4361ee);
+}
 
-    // Capture (take snapshot from video)
-    captureBtn.addEventListener('click', () => {
-      if (!currentImageEl || currentImageEl.tagName !== 'VIDEO') return;
-      const video = currentImageEl;
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const img = document.createElement('img');
-      img.src = canvas.toDataURL('image/jpeg');
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      showImageElement(img);
-      // stop webcam after capturing
-      stopWebcam();
-      toggleWebcamBtn.textContent = 'Use Webcam';
-      captureBtn.disabled = true;
-    });
+/* Image preview */
+.preview {
+  margin-top: 25px;
+}
+#previewImage {
+  max-width: 100%;
+  border-radius: 12px;
+  margin-top: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
 
-    // Clear preview
-    clearBtn.addEventListener('click', () => {
-      stopWebcam();
-      preview.innerHTML = '<div class="small" id="placeholder">No image — upload or use webcam</div>';
-      currentImageEl = null;
-      resultsEl.innerHTML = '<div class="small">Predictions will appear here</div>';
-      uploadInput.value = '';
-      toggleWebcamBtn.textContent = 'Use Webcam';
-      captureBtn.disabled = true;
-    });
+/* Result card */
+.result-card {
+  margin-top: 25px;
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  text-align: left;
+  color: #f5f5f5;
+}
 
-    // Classification
-    classifyBtn.addEventListener('click', async () => {
-      if (!model) {
-        statusText.textContent = 'Model not loaded yet...';
-        return;
-      }
-      if (!currentImageEl) {
-        alert('Please upload an image or use the webcam first.');
-        return;
-      }
-      statusText.textContent = 'Running classification...';
-      resultsEl.innerHTML = '<div class="small">Analyzing...</div>';
-
-      try {
-        // MobileNet classify expects an image, video, or canvas element
-        const topk = showTop || 3;
-        const predictions = await model.classify(currentImageEl, topk);
-        renderPredictions(predictions);
-        statusText.textContent = 'Done';
-      } catch (err) {
-        console.error(err);
-        resultsEl.innerHTML = '<div class="small">Error during classification (see console)</div>';
-        statusText.textContent = 'Error';
-      }
-    });
-
-    function renderPredictions(preds) {
-      if (!Array.isArray(preds) || preds.length === 0) {
-        resultsEl.innerHTML = '<div class="small">No predictions</div>';
-        return;
-      }
-      resultsEl.innerHTML = '';
-      preds.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'result-item';
-        const left = document.createElement('div');
-        left.innerHTML = `<strong>${p.className}</strong><div class="small">${p.probability ? 'probability' : ''}</div>`;
-        const right = document.createElement('div');
-        right.className = 'confidence';
-        right.textContent = (p.probability ? (p.probability * 100).toFixed(1) : (p.prob * 100).toFixed(1)) + '%';
-        div.appendChild(left);
-        div.appendChild(right);
-        resultsEl.appendChild(div);
-      });
-    }
-
-    // Top-K toggles
-    top5Btn.addEventListener('click', () => { showTop = 5; top5Btn.classList.add('btn'); top1Btn.classList.remove('btn'); });
-    top1Btn.addEventListener('click', () => { showTop = 1; top1Btn.classList.add('btn'); top5Btn.classList.remove('btn'); });
-
-    // Accessibility: clicking upload label triggers file input
-    uploadLabel.addEventListener('click', () => uploadInput.click());
-  </script>
-</body>
-</html>
+/* Animations */
+.fade-in-up {
+  animation: fadeInUp 1s ease-out;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
