@@ -19,7 +19,7 @@ Each project runs **directly in your browser** with zero setup. ✨
     Type a sentence and let the AI decide if it’s
     <strong>Positive</strong>, <strong>Negative</strong>, or <strong>Neutral</strong>.
   </p>
-  <a href="/home/projects/sentiment-analyzer.html" class="btn">🔍 Try it Live</a>
+  <a href="/home/projects/sentiment.html" class="btn">🔍 Try it Live</a>
 </div>
 
 ---
