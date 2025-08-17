@@ -121,28 +121,34 @@
 
   <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/resnet@2.1.0"></script>
 
   <script>
     let model;
 
     async function loadModel() {
-      model = await mobilenet.load();
+      model = await resnet.load();
       document.getElementById("classifyBtn").disabled = false;
     }
-    loadModel();
-
-    document.getElementById("imageUpload").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          const img = document.getElementById("previewImage");
-          img.src = event.target.result;
-          img.style.display = "block";
-        };
-        reader.readAsDataURL(file);
+    
+    document.getElementById("classifyBtn").addEventListener("click", async () => {
+      const img = document.getElementById("previewImage");
+      if (!img.src) {
+        alert("Please upload an image first.");
+        return;
       }
+      document.getElementById("result").innerHTML = "⏳ Analyzing...";
+      
+      const logits = model.predict(img);
+      const classes = await model.getTopKClasses(logits, 5); // top 5 results
+      let output = "<h2>Results:</h2><ul style='list-style:none;padding:0'>";
+      classes.forEach((p, i) => {
+        output += `<li style="margin:6px 0; animation:fadeInUp 0.6s ease ${i*0.2}s forwards; opacity:0;">
+                    <strong>${p.className}</strong> — ${(p.probability * 100).toFixed(2)}%
+                  </li>`;
+      });
+      output += "</ul>";
+      document.getElementById("result").innerHTML = output;
     });
 
     document.getElementById("classifyBtn").addEventListener("click", async () => {
