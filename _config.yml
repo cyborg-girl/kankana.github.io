@@ -3,7 +3,7 @@ name: "Your Name"
 description: "Data Scientist ➜ AI Engineer | Projects in LLMs, MLOps, and ML"
 url: "https://kankana.github.io"        # ← replace xyz with YOUR GitHub username
 baseurl: ""                          # Do not change for username.github.io
-repository: "kankana/kankana.github.io"      # ← replace with your repo
+repository: "kankanashukla/kankana.github.io"      # ← replace with your repo
 logo: "/assets/images/site-logo.png" # optional
 
 # Theme
@@ -68,7 +68,7 @@ author:
 comments:
   provider: "giscus"   # set to false to disable
   giscus:
-    repo: "kankana/kankana.github.io"    # your repo
+    repo: "kankanashukla/kankana.github.io"    # your repo
     repo_id: ""                  # fill from giscus setup
     category: "Announcements"    # or your chosen category
     category_id: ""              # fill from giscus setup
