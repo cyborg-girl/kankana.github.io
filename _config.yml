@@ -1,9 +1,9 @@
 title: "Your Name — AI/ML Portfolio"
 name: "Your Name"
 description: "Data Scientist ➜ AI Engineer | Projects in LLMs, MLOps, and ML"
-url: "https://xyz.github.io"        # ← replace xyz with YOUR GitHub username
+url: "https://kankana.github.io"        # ← replace xyz with YOUR GitHub username
 baseurl: ""                          # Do not change for username.github.io
-repository: "xyz/xyz.github.io"      # ← replace with your repo
+repository: "kankana/kankana.github.io"      # ← replace with your repo
 logo: "/assets/images/site-logo.png" # optional
 
 # Theme
