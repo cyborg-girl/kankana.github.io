@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentiment Analyzer Demo | My Portfolio</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 50px 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .demo-container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>AI Project Demo</h1>
+  <h2>Sentiment Analyzer</h2>
+
+  <div class="demo-container">
+    <p>Type some text below and click "Analyze Sentiment":</p>
+    <textarea id="text-input" rows="4" placeholder="Type your text here..."></textarea>
+    <br>
+    <button id="analyze-btn">Analyze Sentiment</button>
+    <p id="result"></p>
+  </div>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
+
+  <script>
+    const threshold = 0.6;
+    let model;
+
+    // Load the pre-trained toxicity model (used here as a proxy for sentiment)
+    toxicity.load(threshold).then(m => {
+      model = m;
+      console.log("Model loaded!");
+    });
+
+    document.getElementById('analyze-btn').onclick = async () => {
+      const text = document.getElementById('text-input').value;
+      if (!text) {
+        document.getElementById('result').innerText = "Please type some text!";
+        return;
+      }
+
+      const predictions = await model.classify([text]);
+      let toxicLabels = predictions.filter(p => p.results[0].match).map(p => p.label);
+      let resultText = toxicLabels.length ? "Negative / Toxic: " + toxicLabels.join(", ") : "Positive / Neutral";
+      document.getElementById('result').innerText = resultText;
+    };
+  </script>
+
+</body>
+</html>
+
