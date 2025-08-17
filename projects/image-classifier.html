@@ -5,11 +5,10 @@
   <title>Image Classifier | My Portfolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Theme stylesheet (reuse your portfolio main.css) -->
+  <!-- Theme stylesheet -->
   <link rel="stylesheet" href="/assets/css/main.css">
 
   <style>
-    /* Override or extend theme styles for this project */
     body {
       background-color: #0d0d0d;
       color: #eee;
@@ -26,7 +25,7 @@
       left: 0;
       z-index: -1;
     }
-    .container {
+    .project-container {
       position: relative;
       min-height: 100vh;
       display: flex;
@@ -42,25 +41,18 @@
       margin-bottom: 10px;
       animation: fadeInDown 1s ease-out;
     }
-    p {
+    p.subtitle {
       max-width: 600px;
       margin: 0 auto 20px;
       color: #ccc;
       animation: fadeIn 1.2s ease-out;
     }
-    textarea {
-      width: 100%;
-      max-width: 600px;
-      height: 120px;
-      margin: 10px 0;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      resize: none;
-      font-size: 16px;
-      background: #1a1a1a;
-      color: #f1f1f1;
+    .upload-section {
+      margin: 20px 0;
       animation: fadeInUp 1.4s ease-out;
+    }
+    input[type="file"] {
+      margin-bottom: 10px;
     }
     button {
       background: linear-gradient(135deg, #4cc9f0, #4895ef);
@@ -72,11 +64,17 @@
       border-radius: 12px;
       cursor: pointer;
       transition: transform 0.2s ease, background 0.3s ease;
-      animation: fadeInUp 1.6s ease-out;
     }
     button:hover {
       transform: scale(1.05);
       background: linear-gradient(135deg, #4895ef, #4361ee);
+    }
+    .preview img {
+      margin-top: 15px;
+      max-width: 300px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(76,201,240,0.3);
+      animation: fadeIn 1.2s ease-out;
     }
     #result {
       margin-top: 25px;
@@ -91,7 +89,7 @@
       animation: fadeInUp 1.8s ease-out;
     }
 
-    /* Fancy animations */
+    /* Animations */
     @keyframes fadeInDown {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -108,80 +106,41 @@
 </head>
 <body>
   <!-- Background animation -->
-  
   <div id="particles-js"></div>
   
-  <div class="project-container fade-in-up">
+  <div class="project-container">
     <h1 class="title-glow">🖼️ Image Classifier</h1>
     <p class="subtitle">Upload an image and the AI will predict what it is! 🚀</p>
   
-    <div class="upload-section fade-in">
+    <div class="upload-section">
       <input type="file" id="imageUpload" accept="image/*" />
-      <button id="classifyBtn" class="btn">🔍 Classify Image</button>
+      <br/>
+      <button id="classifyBtn" disabled>🔍 Classify Image</button>
     </div>
   
-    <div class="preview fade-in">
+    <div class="preview">
       <img id="previewImage" src="" alt="Preview will appear here" />
     </div>
   
-    <div id="result" class="result-card fade-in"></div>
+    <div id="result"></div>
   </div>
 
-<!-- TensorFlow.js -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
 
-<script>
-let model;
-
-async function loadModel() {
-  model = await mobilenet.load();
-  document.getElementById("classifyBtn").disabled = false;
-}
-loadModel();
-
-document.getElementById("imageUpload").addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      document.getElementById("previewImage").src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-document.getElementById("classifyBtn").addEventListener("click", async () => {
-  const img = document.getElementById("previewImage");
-  if (!img.src) {
-    alert("Please upload an image first.");
-    return;
-  }
-  document.getElementById("result").innerHTML = "⏳ Analyzing...";
-  const predictions = await model.classify(img);
-  let output = "<h2 class='fade-in'>Results:</h2><ul>";
-  predictions.forEach((p, i) => {
-    output += `<li class="fade-in" style="animation-delay:${i * 0.2}s"><strong>${p.className}</strong> — ${(p.probability * 100).toFixed(2)}%</li>`;
-  });
-  output += "</ul>";
-  document.getElementById("result").innerHTML = output;
-});
-</script>
-
-
-  <!-- Particles.js animation -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script>
-    particlesJS("particles-js", {
-      particles: {
-        number: { value: 70 },
-        size: { value: 3 },
-        move: { speed: 1 },
-        line_linked: { enable: true, distance: 150, color: "#4cc9f0" },
-        color: { value: "#4cc9f0" }
-      },
-      interactivity: {
-        events: { onhover: { enable: true, mode: "repulse" } }
-      }
-    });
-  </script>
+  let model;
+
+  async function loadModel() {
+    model = await mobilenet.load();
+    document.getElementById("classifyBtn").disabled = false;
+  }
+  loadModel();
+
+  document.getElementById("imageUpload").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        document.getElementById("previewImage").src = event.target.resu
