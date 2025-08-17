@@ -1,15 +1,14 @@
-# GitHub Pages Portfolio Starter (Minimal Mistakes)
+# CVless GitHub Pages Starter
 
-1) Replace `xyz` with your GitHub username in `_config.yml`.
-2) Commit this repo to `YOUR-USERNAME.github.io` (public).
-3) In **Settings → Pages**, set **Deploy from a branch**, **Branch = main**, **Folder = /**.
-4) After it builds, visit `https://YOUR-USERNAME.github.io`.
+This site uses the [cvless Jekyll theme](https://github.com/piazzai/cvless).
 
-### Add a project
-- Duplicate any file in `_projects/` and edit the front matter + content.
-- Images can be external URLs or placed under `assets/images/` and referenced by path.
+## Steps to deploy
+1. Rename this repo to `yourusername.github.io`.
+2. Push the files to GitHub.
+3. Go to **Settings → Pages**, set source to **Deploy from a branch**, select `main` branch, folder `/`.
+4. Visit `https://yourusername.github.io`.
 
-### Optional integrations
-- **Formspree**: replace the endpoint in `contact.md`.
-- **Giscus** comments: fill the IDs under `comments.giscus` in `_config.yml` and set `comments: true` on pages.
-- **Google Analytics**: set `analytics.google.tracking_id`.
+## Customize
+- Edit `_config.yml` with your info.
+- Update `index.md` and `cv.md`.
+- The theme automatically gives you a modern CV + homepage.
