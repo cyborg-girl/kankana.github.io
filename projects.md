@@ -11,7 +11,7 @@ permalink: /projects/
 Welcome to my AI portfolio!  
 Each project runs **directly in your browser** with zero setup. ✨  
 
----
+
 
 ## 💡 Sentiment Analyzer
 <div class="project-card fade-in-up">
@@ -23,7 +23,7 @@ Each project runs **directly in your browser** with zero setup. ✨
   <a href="/home/projects/sentiment.html" class="btn">🔍 Try it Live</a>
 </div>
 
----
+
 
 <!-- You can add more projects in this format -->
 ## 🎨 Coming Soon
