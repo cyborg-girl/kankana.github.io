@@ -5,6 +5,9 @@ baseurl: ""
 
 remote_theme: "piazzai/cvless"
 
+cvless:
+  skin: dark
+
 author:
   name: "Kankana Shukla"
   email: "shukla.kank@gmail.com"
