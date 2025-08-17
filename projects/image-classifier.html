@@ -1,25 +1,131 @@
----
-layout: default
-title: Image Classifier
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Classifier | My Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<div id="particles-js"></div>
+  <!-- Theme stylesheet (reuse your portfolio main.css) -->
+  <link rel="stylesheet" href="/assets/css/main.css">
 
-<div class="project-container fade-in-up">
-  <h1 class="title-glow">🖼️ Image Classifier</h1>
-  <p class="subtitle">Upload an image and the AI will predict what it is! 🚀</p>
+  <style>
+    /* Override or extend theme styles for this project */
+    body {
+      background-color: #0d0d0d;
+      color: #eee;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+    .container {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #4cc9f0;
+      margin-bottom: 10px;
+      animation: fadeInDown 1s ease-out;
+    }
+    p {
+      max-width: 600px;
+      margin: 0 auto 20px;
+      color: #ccc;
+      animation: fadeIn 1.2s ease-out;
+    }
+    textarea {
+      width: 100%;
+      max-width: 600px;
+      height: 120px;
+      margin: 10px 0;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      resize: none;
+      font-size: 16px;
+      background: #1a1a1a;
+      color: #f1f1f1;
+      animation: fadeInUp 1.4s ease-out;
+    }
+    button {
+      background: linear-gradient(135deg, #4cc9f0, #4895ef);
+      color: #121212;
+      border: none;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+      animation: fadeInUp 1.6s ease-out;
+    }
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #4895ef, #4361ee);
+    }
+    #result {
+      margin-top: 25px;
+      font-size: 18px;
+      color: #f1faee;
+      background: rgba(29, 53, 87, 0.8);
+      padding: 15px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      animation: fadeInUp 1.8s ease-out;
+    }
 
-  <div class="upload-section fade-in">
-    <input type="file" id="imageUpload" accept="image/*" />
-    <button id="classifyBtn" class="btn">🔍 Classify Image</button>
+    /* Fancy animations */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background animation -->
+  
+  <div id="particles-js"></div>
+  
+  <div class="project-container fade-in-up">
+    <h1 class="title-glow">🖼️ Image Classifier</h1>
+    <p class="subtitle">Upload an image and the AI will predict what it is! 🚀</p>
+  
+    <div class="upload-section fade-in">
+      <input type="file" id="imageUpload" accept="image/*" />
+      <button id="classifyBtn" class="btn">🔍 Classify Image</button>
+    </div>
+  
+    <div class="preview fade-in">
+      <img id="previewImage" src="" alt="Preview will appear here" />
+    </div>
+  
+    <div id="result" class="result-card fade-in"></div>
   </div>
-
-  <div class="preview fade-in">
-    <img id="previewImage" src="" alt="Preview will appear here" />
-  </div>
-
-  <div id="result" class="result-card fade-in"></div>
-</div>
 
 <!-- TensorFlow.js -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
@@ -162,3 +268,20 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+  <!-- Particles.js animation -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 70 },
+        size: { value: 3 },
+        move: { speed: 1 },
+        line_linked: { enable: true, distance: 150, color: "#4cc9f0" },
+        color: { value: "#4cc9f0" }
+      },
+      interactivity: {
+        events: { onhover: { enable: true, mode: "repulse" } }
+      }
+    });
+  </script>
