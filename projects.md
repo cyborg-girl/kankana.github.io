@@ -31,9 +31,8 @@ Each project runs **directly in your browser** with zero setup. ✨
   <h2>🎨 Image Classifier</h2>
   <p>
     Upload an image and see the AI predict what it contains.  
-    (Work in progress – stay tuned!)
   </p>
-  <a href="#" class="btn disabled">⏳ Coming Soon</a>
+  <a href="/home/projects/image-classifier.html" class="btn">🔍 Try it Live</a>
 </div>
 
 </div>
