@@ -1,1 +1,26 @@
-<!-- cv.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }} | {{ site.title }}</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    body { background-color: #111; color: #fff; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 50px; }
+    h1, h2, h3 { color: #fff; }
+    a { color: #fff; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ site.author.name }}</h1>
+    <nav>
+      <a href="/">Home</a> | <a href="/projects/">Projects</a>
+    </nav>
+  </header>
+
+  <main>
+    {{ content }}
+  </main>
+</body>
+</html>
