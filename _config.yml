@@ -1,0 +1,89 @@
+title: "Your Name — AI/ML Portfolio"
+name: "Your Name"
+description: "Data Scientist ➜ AI Engineer | Projects in LLMs, MLOps, and ML"
+url: "https://xyz.github.io"        # ← replace xyz with YOUR GitHub username
+baseurl: ""                          # Do not change for username.github.io
+repository: "xyz/xyz.github.io"      # ← replace with your repo
+logo: "/assets/images/site-logo.png" # optional
+
+# Theme
+remote_theme: "mmistakes/minimal-mistakes"
+minimal_mistakes_skin: "dark"  # "dark", "default", "air", "neon", etc.
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+plugins:
+  - jekyll-include-cache
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-remote-theme
+
+# Collections
+collections:
+  projects:
+    output: true
+    permalink: /projects/:path/
+
+defaults:
+  - scope:
+      path: ""
+      type: "projects"
+    values:
+      layout: single
+      author_profile: true
+      share: true
+      read_time: false
+      comments: false
+      toc: true
+      toc_sticky: true
+
+# Navigation (see _data/navigation.yml)
+include: ["_pages"]
+
+# Author & Social (fill these in)
+author:
+  name: "Your Name"
+  avatar: "/assets/images/headshot.jpg"
+  bio: "I build reliable ML & LLM systems."
+  location: "City, Country"
+  links:
+    - label: "GitHub"
+      icon: "fab fa-github"
+      url: "https://github.com/xyz"
+    - label: "LinkedIn"
+      icon: "fab fa-linkedin"
+      url: "https://www.linkedin.com/in/your-handle"
+    - label: "Kaggle"
+      icon: "fab fa-kaggle"
+      url: "https://kaggle.com/your-handle"
+    - label: "Email"
+      icon: "fas fa-envelope"
+      url: "mailto:you@example.com"
+
+# Comments (optional: Giscus)
+comments:
+  provider: "giscus"   # set to false to disable
+  giscus:
+    repo: "xyz/xyz.github.io"    # your repo
+    repo_id: ""                  # fill from giscus setup
+    category: "Announcements"    # or your chosen category
+    category_id: ""              # fill from giscus setup
+    mapping: "pathname"
+    reactions-enabled: "1"
+    emit-metadata: "0"
+    input-position: "bottom"
+    theme: "preferred_color_scheme"
+    lang: "en"
+
+# Analytics (optional)
+analytics:
+  provider: "google-gtag"    # or "false" to disable
+  google:
+    tracking_id: "G-XXXXXXXXXX"  # your GA4 Measurement ID
+
+paginate: 6
+paginate_path: "/blog/page:num/"
