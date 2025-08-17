@@ -6,4 +6,4 @@ permalink: /projects/
 
 Below is an example project. Add more posts in _posts/ for additional projects.
 
-<a href="/projects/sentiment.html">Sentiment Analyzer Demo</a>
+<a href="kankanashukla.github.io/home/projects/sentiment.html">Sentiment Analyzer Demo</a>
