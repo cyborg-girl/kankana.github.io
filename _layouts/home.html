@@ -1,1 +1,87 @@
-<!-- home.html placeholder -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }} | {{ site.title }}</title>
+  
+  <!-- Link main CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css">
+  
+  <style>
+    /* Particle container full-screen behind content */
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      background-color: #111; /* Dark background */
+    }
+
+    /* Homepage content styling */
+    .home-content {
+      position: relative;
+      text-align: center;
+      color: #fff;
+      padding: 150px 20px 50px;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    .home-content h1 {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+    }
+
+    .home-content p {
+      font-size: 1.2em;
+      margin-bottom: 1.5em;
+    }
+
+    .home-content a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: bold;
+    }
+
+    .home-content a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Particle animation container -->
+  <div id="particles-js"></div>
+
+  <!-- Main homepage content -->
+  <main class="home-content">
+    <h1>Hi, I'm Kankana Shukla 👋</h1>
+    <p>I'm a data scientist transitioning into AI engineering.</p>
+    <a href="/cv/">CV</a> | <a href="/projects/">Projects</a>
+  </main>
+
+  <!-- Particles.js library from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  
+  <!-- Initialize particles -->
+  <script>
+    particlesJS('particles-js', {
+      "particles": {
+        "number": { "value": 80 },
+        "color": { "value": "#ffffff" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5 },
+        "size": { "value": 3 },
+        "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+        "move": { "enable": true, "speed": 3 }
+      },
+      "interactivity": {
+        "events": { "onhover": { "enable": true, "mode": "repulse" } }
+      }
+    });
+  </script>
+</body>
+</html>
