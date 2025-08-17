@@ -46,29 +46,29 @@ include: ["_pages"]
 
 # Author & Social (fill these in)
 author:
-  name: "Your Name"
+  name: "Kankana Shukla"
   avatar: "/assets/images/headshot.jpg"
   bio: "I build reliable ML & LLM systems."
   location: "City, Country"
   links:
     - label: "GitHub"
       icon: "fab fa-github"
-      url: "https://github.com/xyz"
+      url: "https://github.com/cyborg-girl"
     - label: "LinkedIn"
       icon: "fab fa-linkedin"
-      url: "https://www.linkedin.com/in/your-handle"
+      url: "https://www.linkedin.com/in/cyborg-girl"
     - label: "Kaggle"
       icon: "fab fa-kaggle"
       url: "https://kaggle.com/your-handle"
     - label: "Email"
       icon: "fas fa-envelope"
-      url: "mailto:you@example.com"
+      url: "mailto:shukla.kank@gmail.com"
 
 # Comments (optional: Giscus)
 comments:
   provider: "giscus"   # set to false to disable
   giscus:
-    repo: "xyz/xyz.github.io"    # your repo
+    repo: "kankana/kankana.github.io"    # your repo
     repo_id: ""                  # fill from giscus setup
     category: "Announcements"    # or your chosen category
     category_id: ""              # fill from giscus setup
