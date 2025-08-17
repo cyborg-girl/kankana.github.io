@@ -1,0 +1,164 @@
+---
+layout: default
+title: Image Classifier
+---
+
+<div id="particles-js"></div>
+
+<div class="project-container fade-in-up">
+  <h1 class="title-glow">🖼️ Image Classifier</h1>
+  <p class="subtitle">Upload an image and the AI will predict what it is! 🚀</p>
+
+  <div class="upload-section fade-in">
+    <input type="file" id="imageUpload" accept="image/*" />
+    <button id="classifyBtn" class="btn">🔍 Classify Image</button>
+  </div>
+
+  <div class="preview fade-in">
+    <img id="previewImage" src="" alt="Preview will appear here" />
+  </div>
+
+  <div id="result" class="result-card fade-in"></div>
+</div>
+
+<!-- TensorFlow.js -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+
+<script>
+let model;
+
+async function loadModel() {
+  model = await mobilenet.load();
+  document.getElementById("classifyBtn").disabled = false;
+}
+loadModel();
+
+document.getElementById("imageUpload").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      document.getElementById("previewImage").src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+document.getElementById("classifyBtn").addEventListener("click", async () => {
+  const img = document.getElementById("previewImage");
+  if (!img.src) {
+    alert("Please upload an image first.");
+    return;
+  }
+  document.getElementById("result").innerHTML = "⏳ Analyzing...";
+  const predictions = await model.classify(img);
+  let output = "<h2 class='fade-in'>Results:</h2><ul>";
+  predictions.forEach((p, i) => {
+    output += `<li class="fade-in" style="animation-delay:${i * 0.2}s"><strong>${p.className}</strong> — ${(p.probability * 100).toFixed(2)}%</li>`;
+  });
+  output += "</ul>";
+  document.getElementById("result").innerHTML = output;
+});
+</script>
+
+<style>
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.project-container {
+  max-width: 800px;
+  margin: 80px auto;
+  padding: 30px;
+  text-align: center;
+  background: rgba(22, 27, 34, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+}
+
+.title-glow {
+  font-size: 2.2rem;
+  color: #58a6ff;
+  text-shadow: 0 0 15px rgba(88,166,255,0.7);
+  animation: fadeInDown 1s ease-out;
+}
+
+.subtitle {
+  margin-top: 10px;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.upload-section input[type="file"] {
+  margin: 15px 0;
+  padding: 10px;
+  background: #161b22;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #58a6ff, #1f6feb);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(88,166,255,0.6);
+}
+
+.preview img {
+  margin-top: 20px;
+  max-width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.result-card {
+  margin-top: 25px;
+  background: #161b22;
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  text-align: left;
+  border: 1px solid #30363d;
+  animation: fadeIn 1s ease forwards;
+}
+
+.fade-in-up {
+  animation: fadeInUp 1s ease-out;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
