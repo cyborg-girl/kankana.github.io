@@ -15,7 +15,6 @@ Each project runs **directly in your browser** with zero setup. ✨
 
 ## 💡 Sentiment Analyzer
 <div class="project-card fade-in-up">
-  <h2>💡 Sentiment Analyzer</h2>
   <p>
     Type a sentence and let the AI decide if it’s
     <strong>Positive</strong>, <strong>Negative</strong>, or <strong>Neutral</strong>.
