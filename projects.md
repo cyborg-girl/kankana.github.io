@@ -1,6 +1,7 @@
 ---
-layout: collection
+layout: blog
 title: "Projects"
-collection: projects
-entries_layout: grid
+permalink: /projects/
 ---
+
+Below is an example project. Add more posts in _posts/ for additional projects.
