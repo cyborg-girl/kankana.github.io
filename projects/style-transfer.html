@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎨 Image Style Transfer | Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Theme Styles -->
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #f0f0f0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #4cc9f0;
+      animation: fadeInDown 1s ease-out;
+    }
+    p {
+      color: #bbb;
+      margin-bottom: 25px;
+      max-width: 600px;
+      line-height: 1.5;
+      animation: fadeIn 1.5s ease-out;
+    }
+    input[type="file"] {
+      margin: 15px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #1a1a1a;
+      color: #eee;
+      cursor: pointer;
+    }
+    .buttons {
+      margin: 20px 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    button {
+      background: linear-gradient(135deg, #4cc9f0, #4895ef);
+      color: #0d0d0d;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    button:hover {
+      transform: scale(1.08);
+      box-shadow: 0px 4px 20px rgba(72, 149, 239, 0.4);
+    }
+    canvas {
+      margin-top: 30px;
+      border-radius: 16px;
+      box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.6);
+      max-width: 95%;
+      animation: fadeIn 1.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Style Transfer Demo</h1>
+  <p>Upload a content image and apply famous art styles to transform it instantly in your browser.</p>
+
+  <input type="file" id="contentUpload" accept="image/*" />
+
+  <div class="buttons">
+    <button onclick="applyStyle('starry_night.jpg')">🌌 Van Gogh – Starry Night</button>
+    <button onclick="applyStyle('kandinsky.jpg')">🎨 Kandinsky</button>
+    <button onclick="applyStyle('mosaic.jpg')">🧩 Mosaic</button>
+    <button onclick="applyStyle('water_lilies.jpg')">🌊 Monet – Water Lilies</button>
+  </div>
+
+  <canvas id="outputCanvas" width="400" height="400"></canvas>
+
+  <!-- TensorFlow + Magenta -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@magenta/image@0.4.3"></script>
+  <script>
+    let styleNet;
+    let contentImg = null;
+
+    async function loadModels() {
+      styleNet = new mi.ArbitraryStyleTransferNetwork();
+      await styleNet.initialize();
+      console.log("✅ Models loaded successfully");
+    }
+    loadModels();
+
+    // Load uploaded content image
+    document.getElementById("contentUpload").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        contentImg = new Image();
+        contentImg.src = ev.target.result;
+        contentImg.onload = () => {
+          const ctx = document.getElementById("outputCanvas").getContext("2d");
+          ctx.drawImage(contentImg, 0, 0, 400, 400);
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Apply chosen style
+    async function applyStyle(styleFile) {
+      if (!contentImg) {
+        alert("Please upload a content image first!");
+        return;
+      }
+      const styleImg = new Image();
+      styleImg.crossOrigin = "anonymous";
+      styleImg.src = "/home//assets/images/styles/" + styleFile;
+
+      styleImg.onload = async () => {
+        const bottleneck = await styleNet.predict(styleImg);
+        const stylized = await styleNet.stylize(contentImg, bottleneck);
+        stylized.toPixels(document.getElementById("outputCanvas"));
+      };
+    }
+  </script>
+</body>
+</html>
+
