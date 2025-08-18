@@ -126,7 +126,7 @@ document.querySelectorAll('.right .btn[data-style]').forEach(btn=>{
     const styleName = btn.dataset.style;
     resultsEl.textContent='Applying style...';
     try {
-      styleNet = ml5.styleTransfer(`/assets/models/${styleName}/`, ()=>console.log(styleName+' loaded'));
+      styleNet = ml5.styleTransfer(`${styleName}/`, ()=>console.log(styleName+' loaded'));
       await new Promise(res=>setTimeout(res,100)); // small delay
       styleNet.transfer(currentImg, (err,result)=>{
         if(err){ console.error(err); resultsEl.textContent='Error applying style'; return; }
