@@ -46,4 +46,14 @@ permalink: /projects/
   <a href="/home/projects/facial-expression.html" class="btn">🔍 Try it Live</a>
 </div>
 
+
+
+<div class="project-card fade-in-up">
+  <h2>🎨 Style Transfer</h2>
+  <p>
+    Upload a content image and apply famous art styles to transform it instantly in your browser.  
+  </p>
+  <a href="/home/projects/style-transfer.html" class="btn">🔍 Try it Live</a>
+</div>
+
 </div>
