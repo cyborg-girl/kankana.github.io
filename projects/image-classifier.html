@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Image Classifier | My Portfolio</title>
+  <title>AI Image Classifier | Portfolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Base theme stylesheet (reuse CVLess / main.css) -->
+  <link rel="stylesheet" href="/assets/css/main.css">
 
   <style>
     body {
@@ -13,6 +16,15 @@
       margin: 0;
       padding: 0;
       overflow-x: hidden;
+      text-align: center;
+    }
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
     }
     .container {
       min-height: 100vh;
@@ -20,94 +32,160 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      text-align: center;
-      padding: 20px;
+      padding: 40px 20px;
     }
-    h1 { color: #4cc9f0; }
-    #previewImage {
-      max-width: 300px;
-      margin-top: 20px;
-      border-radius: 12px;
-      display: none;
+    h1 {
+      font-size: 2.5rem;
+      color: #4cc9f0;
+      margin-bottom: 10px;
+      animation: fadeInDown 1s ease-out;
+    }
+    p {
+      color: #aaa;
+      margin-bottom: 20px;
+      animation: fadeIn 1.2s ease-out;
+    }
+    input[type="file"] {
+      margin: 20px 0;
+      color: #eee;
     }
     button {
-      margin-top: 10px;
-      padding: 12px 24px;
       background: linear-gradient(135deg, #4cc9f0, #4895ef);
+      color: #121212;
       border: none;
-      border-radius: 10px;
+      padding: 14px 32px;
+      font-size: 16px;
       font-weight: bold;
+      border-radius: 12px;
       cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+      animation: fadeInUp 1.6s ease-out;
+    }
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #4895ef, #4361ee);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #previewImage {
+      margin-top: 20px;
+      max-width: 300px;
+      border-radius: 12px;
+      display: none;
+      animation: fadeInUp 1.4s ease-out;
     }
     #result {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 10px;
-      background: rgba(29,53,87,0.7);
+      margin-top: 25px;
+      font-size: 18px;
+      color: #f1faee;
+      background: rgba(29, 53, 87, 0.85);
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
       max-width: 500px;
-      text-align: center;
+      text-align: left;
+      animation: fadeInUp 1.8s ease-out;
+    }
+    .bar {
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #4cc9f0, #4895ef);
+      margin: 5px 0 15px;
+      transition: width 0.6s ease;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
+  <div id="particles-js"></div>
+
   <div class="container">
-    <h1>🖼️ Image Classifier</h1>
+    <h1>🖼️ AI Image Classifier</h1>
+    <p>Upload an image and let MobileNet v2 (α=1.0) analyze it 🚀</p>
+
     <input type="file" id="imageUpload" accept="image/*" />
     <button id="classifyBtn" disabled>🔍 Classify Image</button>
 
-    <img id="previewImage" src="" alt="Preview will appear here" />
+    <img id="previewImage" alt="Preview will appear here" />
     <div id="result"></div>
   </div>
 
-  <!-- TensorFlow.js + ResNet -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/resnet"></script>
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
 
   <script>
   let model;
 
   async function loadModel() {
-    model = await resnet.load();
+    document.getElementById("result").innerHTML = "⏳ Loading model...";
+    model = await mobilenet.load({ version: 2, alpha: 1.0 });
     document.getElementById("classifyBtn").disabled = false;
+    document.getElementById("result").innerHTML = "✅ Model loaded! Upload an image to begin.";
   }
   loadModel();
 
-  // Handle file upload + preview
+  // Preview uploaded image
   document.getElementById("imageUpload").addEventListener("change", function (e) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = function (event) {
-        const img = document.getElementById("previewImage");
-        img.src = event.target.result;
-        img.style.display = "block";
+        const imgEl = document.getElementById("previewImage");
+        imgEl.src = event.target.result;
+        imgEl.style.display = "block";
       };
       reader.readAsDataURL(file);
     }
   });
 
-  // Handle classification
+  // Classify
   document.getElementById("classifyBtn").addEventListener("click", async () => {
     const img = document.getElementById("previewImage");
     if (!img.src) {
       alert("Please upload an image first.");
       return;
     }
-
     document.getElementById("result").innerHTML = "⏳ Analyzing...";
-    await img.decode(); // ✅ ensure image is loaded
+    const predictions = await model.classify(img);
 
-    const logits = model.predict(img);
-    const classes = await model.getTopKClasses(logits, 5);
-
-    let output = "<h2>Results:</h2><ul style='list-style:none;padding:0'>";
-    classes.forEach((p, i) => {
-      output += `<li><strong>${p.className}</strong> — ${(p.probability * 100).toFixed(2)}%</li>`;
+    let output = "<h2>Results:</h2>";
+    predictions.slice(0, 3).forEach((p) => {
+      const percent = (p.probability * 100).toFixed(2);
+      output += `<strong>${p.className}</strong> — ${percent}%<div class="bar" style="width:${percent}%;"></div>`;
     });
-    output += "</ul>";
-
     document.getElementById("result").innerHTML = output;
   });
+  </script>
+
+  <!-- Particles.js background -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 70 },
+        size: { value: 3 },
+        move: { speed: 1 },
+        line_linked: { enable: true, distance: 150, color: "#4cc9f0" },
+        color: { value: "#4cc9f0" }
+      },
+      interactivity: {
+        events: { onhover: { enable: true, mode: "repulse" } }
+      }
+    });
   </script>
 </body>
 </html>
