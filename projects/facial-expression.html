@@ -86,8 +86,8 @@ async function init() {
   const video = document.getElementById('video');
 
   try {
-    await faceapi.nets.tinyFaceDetector.loadFromUri('/home/models');
-    await faceapi.nets.faceExpressionNet.loadFromUri('/home/models');
+    await faceapi.nets.tinyFaceDetector.loadFromUri('https://github.com/justadudewhohacks/face-api.js/tree/master/weights');
+    await faceapi.nets.faceExpressionNet.loadFromUri('https://github.com/justadudewhohacks/face-api.js/tree/master/weights');
     statusEl.textContent = 'Models loaded ✅';
   } catch(err){
     console.error('Model load error', err);
