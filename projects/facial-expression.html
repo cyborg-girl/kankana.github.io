@@ -1,119 +1,136 @@
----
-layout: projects
-title: Face Expression Recognition
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Face Expression Recognition — AI Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<div id="particles-js"></div>
-
-<div class="project-container fade-in-up">
-  <h1>😊 Face Expression Recognition</h1>
-  <p>See your facial expression in real-time! 😎</p>
-
-  <div class="preview" style="position:relative; width:360px; height:360px; margin:0 auto;">
-    <video id="video" autoplay muted playsinline style="width:100%; height:100%; border-radius:12px;"></video>
-    <canvas id="overlay" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
-  </div>
-
-  <div class="status" style="margin-top:12px;">Status: <span id="status-text">Loading models...</span></div>
-</div>
-
-<!-- Theme CSS -->
+<!-- CVless theme -->
 <link rel="stylesheet" href="/assets/css/main.css">
 
-<!-- Face API -->
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-
-<script>
-const statusText = document.getElementById('status-text');
-const video = document.getElementById('video');
-const overlay = document.getElementById('overlay');
-const overlayCtx = overlay.getContext('2d');
-
-// Load models from hosted CDN (works over HTTPS)
-async function loadModels() {
-  try {
-    statusText.textContent = 'Loading models...';
-    await faceapi.nets.tinyFaceDetector.loadFromUri('/home/models/');
-    await faceapi.nets.faceExpressionNet.loadFromUri('/home/models/');
-    statusText.textContent = 'Models loaded ✅';
-    startVideo();
-  } catch (err) {
-    console.error(err);
-    statusText.textContent = 'Failed to load models — check console';
-  }
+<style>
+:root{
+  --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent:#4cc9f0; --muted:#bfc9d9;
 }
-
-// Start webcam
-async function startVideo() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    video.srcObject = stream;
-    video.onloadedmetadata = () => video.play();
-    detectExpressions();
-  } catch (err) {
-    console.error('Webcam error:', err);
-    statusText.textContent = 'Cannot access webcam. Make sure you are on HTTPS and allow camera access.';
-  }
+body {
+  margin:0; padding:0; background:var(--bg); color:#fff; font-family:'Inter',sans-serif;
+  overflow-x:hidden;
 }
-
-// Detect expressions continuously
-async function detectExpressions() {
-  const displaySize = { width: video.videoWidth, height: video.videoHeight };
-  faceapi.matchDimensions(overlay, displaySize);
-
-  setInterval(async () => {
-    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-                                    .withFaceExpressions();
-    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-
-    if (detections.length > 0) {
-      detections.forEach(det => {
-        const box = det.detection.box;
-        overlayCtx.strokeStyle = '#4cc9f0';
-        overlayCtx.lineWidth = 2;
-        overlayCtx.strokeRect(box.x, box.y, box.width, box.height);
-
-        const expressions = det.expressions;
-        const sorted = Object.entries(expressions).sort((a,b)=>b[1]-a[1]);
-        overlayCtx.fillStyle = '#4cc9f0';
-        overlayCtx.font = '16px Inter';
-        overlayCtx.fillText(sorted[0][0], box.x, box.y > 20 ? box.y-5 : box.y+15);
-      });
-    }
-  }, 200);
+#particles-js {
+  position:fixed; width:100%; height:100%; top:0; left:0; z-index:-1;
 }
+.wrap {
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 20px; text-align:center;
+}
+.card {
+  max-width:900px; width:100%; background:var(--card); border-radius:16px; padding:30px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.6);
+  display:grid; grid-template-columns: 420px 1fr; gap:20px; align-items:start;
+}
+.left, .right { display:flex; flex-direction:column; align-items:center; gap:15px; }
+.preview { width:360px; height:360px; border-radius:12px; background:#111;
+display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);}
+.preview video, .preview canvas { width:100%; height:100%; object-fit:cover; display:block; }
+.status { font-size:0.9rem; color:var(--muted); }
+.results { background:rgba(0,0,0,0.12); padding:12px; border-radius:10px; width:100%; max-width:420px; text-align:left; }
+.result-item { display:flex; justify-content:space-between; padding:6px 8px; border-bottom:1px dashed rgba(255,255,255,0.06);}
+.result-item:last-child{border-bottom:none;}
+.confidence { font-weight:700; color:#dff7ff; }
 
-loadModels();
-</script>
+h1 { margin:0; color:var(--accent); font-size:1.6rem; animation: fadeInDown 1s ease-out;}
+p.lead { margin:0; color:var(--muted); animation: fadeIn 1.2s ease-out; }
+.btn { background:linear-gradient(135deg,var(--accent),#4895ef); color:#0b1020; border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer; transition: transform 0.2s; animation: fadeInUp 1.4s ease-out;}
+.btn:hover{transform:scale(1.05);}
+.btn.ghost { background:transparent; color:var(--accent); border:1px solid rgba(255,255,255,0.06);}
+@keyframes fadeInDown{from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);}}
+@keyframes fadeInUp{from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+@media(max-width:980px){.card{grid-template-columns:1fr;} .preview{width:100%; height:320px;}}
+</style>
+</head>
+<body>
+<div id="particles-js"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="left">
+      <div class="preview" id="preview">
+        <video id="video" autoplay muted playsinline></video>
+      </div>
+      <div class="status" id="status">Loading models...</div>
+    </div>
+
+    <div class="right">
+      <h1>😃 Face Expression Recognition</h1>
+      <p class="lead">Live webcam demo using TensorFlow.js & face-api.js. Recognizes expressions in real-time!</p>
+      <div class="results" id="results"><div class="small">Predictions will appear here</div></div>
+    </div>
+  </div>
+</div>
 
 <!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
-particlesJS("particles-js", {
-  particles: {
-    number: { value: 70 },
-    size: { value: 3 },
-    move: { speed: 1 },
-    line_linked: { enable: true, distance: 140, color: "#4cc9f0" },
-    color: { value: "#4cc9f0" }
-  },
-  interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
+particlesJS("particles-js",{
+  particles:{number:{value:70},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:140,color:"#4cc9f0"},color:{value:"#4cc9f0"}},
+  interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
 });
 </script>
 
-<style>
-.project-container {
-  max-width: 600px;
-  margin: 80px auto;
-  padding: 30px;
-  text-align: center;
-  background: rgba(22,27,34,0.95);
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-  backdrop-filter: blur(10px);
+<!-- face-api.js -->
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+async function init() {
+  const statusEl = document.getElementById('status');
+  const resultsEl = document.getElementById('results');
+  const video = document.getElementById('video');
+
+  try {
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/home/models');
+    await faceapi.nets.faceExpressionNet.loadFromUri('/home/models');
+    statusEl.textContent = 'Models loaded ✅';
+  } catch(err){
+    console.error('Model load error', err);
+    statusEl.textContent = 'Failed to load models — check console';
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+  } catch(err) {
+    console.error('Camera error', err);
+    statusEl.textContent = 'Failed to access webcam';
+    return;
+  }
+
+  video.addEventListener('play', () => {
+    const canvas = faceapi.createCanvasFromMedia(video);
+    document.getElementById('preview').append(canvas);
+    const displaySize = { width: video.width || 360, height: video.height || 360 };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    setInterval(async () => {
+      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+      const resized = faceapi.resizeResults(detections, displaySize);
+      canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+      faceapi.draw.drawDetections(canvas, resized);
+      faceapi.draw.drawFaceExpressions(canvas, resized);
+
+      resultsEl.innerHTML = '';
+      resized.forEach(det => {
+        Object.entries(det.expressions).forEach(([expr, prob]) => {
+          const div = document.createElement('div');
+          div.className = 'result-item';
+          div.innerHTML = `<span>${expr}</span><span class="confidence">${(prob*100).toFixed(1)}%</span>`;
+          resultsEl.appendChild(div);
+        });
+      });
+    }, 200);
+  });
 }
-h1 { color:#4cc9f0; }
-.status { color:#ccc; font-size:0.95rem; }
-.fade-in-up { animation: fadeInUp 1s ease-out; }
-@keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-</style>
+
+init();
+</script>
+</body>
+</html>
