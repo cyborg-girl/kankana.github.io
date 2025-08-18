@@ -6,14 +6,15 @@ permalink: /projects/
 
 <div class="projects-container">
 
-# 🚀 My AI Projects
+<h1> 🚀 My AI Projects </h1>
+  <p>
+    Welcome to my AI portfolio!  
+    Each project runs <strong>directly in your browser</strong> with zero setup. ✨  
+  </p>
 
-Welcome to my AI portfolio!  
-Each project runs **directly in your browser** with zero setup. ✨  
 
 
-
-## 💡 Sentiment Analyzer
+<!-- ## 💡 Sentiment Analyzer -->
 <div class="project-card fade-in-up">
   <h2>💡 Sentiment Analyzer</h2>
   <p>
@@ -26,13 +27,23 @@ Each project runs **directly in your browser** with zero setup. ✨
 
 
 <!-- You can add more projects in this format -->
-## 🎨 Coming Soon
+<!-- ## 🎨 Coming Soon -->
 <div class="project-card fade-in-up">
   <h2>🎨 Image Classifier</h2>
   <p>
     Upload an image and see the AI predict what it contains.  
   </p>
   <a href="/home/projects/image-classifier.html" class="btn">🔍 Try it Live</a>
+</div>
+
+
+
+<div class="project-card fade-in-up">
+  <h2>🎨 Facial Expression Recognition</h2>
+  <p>
+    Upload an image and see the AI predict what it contains.  
+  </p>
+  <a href="/home/projects/face-expression.html" class="btn">🔍 Try it Live</a>
 </div>
 
 </div>
