@@ -1,147 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>🎨 Image Style Transfer | Portfolio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Theme Styles -->
+  <meta charset="UTF-8">
+  <title>Image Style Transfer | My Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- CVless theme CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css">
+  
   <style>
+    :root {
+      --bg: #0d1117;
+      --card: rgba(22, 27, 34, 0.95);
+      --accent: #4cc9f0;
+      --muted: #bfc9d9;
+    }
     body {
-      background: #0d0d0d;
-      color: #f0f0f0;
+      background: var(--bg);
+      color: #e6edf3;
       font-family: 'Inter', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
       margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    #particles-js { position: fixed; width: 100%; height: 100%; top:0; left:0; z-index:-1; }
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       padding: 40px 20px;
       text-align: center;
     }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      color: #4cc9f0;
-      animation: fadeInDown 1s ease-out;
+    .card {
+      max-width: 900px;
+      width: 100%;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 1s ease-out;
     }
-    p {
-      color: #bbb;
-      margin-bottom: 25px;
-      max-width: 600px;
-      line-height: 1.5;
-      animation: fadeIn 1.5s ease-out;
-    }
-    input[type="file"] {
-      margin: 15px 0;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      background: #1a1a1a;
-      color: #eee;
-      cursor: pointer;
-    }
-    .buttons {
-      margin: 20px 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-    }
+    h1 { color: var(--accent); font-size: 2rem; margin-bottom: 10px; }
+    p { color: var(--muted); margin-bottom: 20px; }
+    .preview img { max-width: 100%; border-radius: 12px; margin-top: 15px; }
+    .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
     button {
-      background: linear-gradient(135deg, #4cc9f0, #4895ef);
-      color: #0d0d0d;
+      padding: 12px 24px;
       border: none;
-      padding: 12px 20px;
       border-radius: 12px;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.3s;
+      background: linear-gradient(135deg, #4cc9f0, #1f6feb);
+      color: #fff;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
     }
-    button:hover {
-      transform: scale(1.08);
-      box-shadow: 0px 4px 20px rgba(72, 149, 239, 0.4);
-    }
-    canvas {
-      margin-top: 30px;
-      border-radius: 16px;
-      box-shadow: 0px 6px 30px rgba(0, 0, 0, 0.6);
-      max-width: 95%;
-      animation: fadeIn 1.5s ease-out;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-25px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(76,201,240,0.6); }
+    .result { margin-top: 20px; }
+    @keyframes fadeInUp { from { opacity:0; transform: translateY(20px);} to {opacity:1; transform:translateY(0);} }
   </style>
 </head>
 <body>
-  <h1>🎨 Style Transfer Demo</h1>
-  <p>Upload a content image and apply famous art styles to transform it instantly in your browser.</p>
-
-  <input type="file" id="contentUpload" accept="image/*" />
-
-  <div class="buttons">
-    <button onclick="applyStyle('starry_night.jpg')">🌌 Van Gogh – Starry Night</button>
-    <button onclick="applyStyle('kandinsky.jpg')">🎨 Kandinsky</button>
-    <button onclick="applyStyle('mosaic.jpg')">🧩 Mosaic</button>
-    <button onclick="applyStyle('water_lilies.jpg')">🌊 Monet – Water Lilies</button>
+  <div id="particles-js"></div>
+  
+  <div class="wrap">
+    <div class="card">
+      <h1>🎨 Image Style Transfer</h1>
+      <p>Upload an image and apply a famous art style! Uses <strong>ml5.js</strong> in-browser.</p>
+      
+      <input type="file" id="imageUpload" accept="image/*">
+      <div class="controls">
+        <button data-style="starry-night">Starry Night</button>
+        <button data-style="kandinsky">Kandinsky</button>
+        <button data-style="mosaic">Mosaic</button>
+        <button data-style="water-lilies">Water Lilies</button>
+      </div>
+      
+      <div class="preview" id="preview">
+        <div class="small">Your image will appear here</div>
+      </div>
+      <div class="result" id="result"></div>
+    </div>
   </div>
-
-  <canvas id="outputCanvas" width="400" height="400"></canvas>
-
-  <!-- TensorFlow + Magenta -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@magenta/image@0.4.3"></script>
+  
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script>
-    let styleNet;
-    let contentImg = null;
-
-    async function loadModels() {
-      styleNet = new mi.ArbitraryStyleTransferNetwork();
-      await styleNet.initialize();
-      console.log("✅ Models loaded successfully");
+    particlesJS("particles-js", {
+      particles: { number: { value: 70 }, size: { value: 3 }, move: { speed: 1 }, line_linked: { enable: true, distance: 150, color: "#4cc9f0" }, color: { value: "#4cc9f0" } },
+      interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
+    });
+  </script>
+  
+  <!-- ml5.js -->
+  <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
+  
+  <script>
+    const styleButtons = document.querySelectorAll('button[data-style]');
+    const preview = document.getElementById('preview');
+    const result = document.getElementById('result');
+    let imgElement = null;
+    let styleTransferModel = null;
+    
+    // Local paths for style images
+    const stylePaths = {
+      "starry-night": "/home/assets/images/styles/starry-night.jpg",
+      "kandinsky": "/home/assets/images/styles/kandinsky.jpg",
+      "mosaic": "/home/assets/images/styles/mosaic.jpg",
+      "water-lilies": "/home/assets/images/styles/water-lilies.jpg"
+    };
+    
+    async function loadModel(styleName) {
+      result.innerHTML = "Loading model...";
+      styleTransferModel = await ml5.styleTransfer(stylePaths[styleName], () => {
+        result.innerHTML = "Model loaded! Click Apply Style.";
+      });
     }
-    loadModels();
-
-    // Load uploaded content image
-    document.getElementById("contentUpload").addEventListener("change", e => {
+    
+    document.getElementById('imageUpload').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        contentImg = new Image();
-        contentImg.src = ev.target.result;
-        contentImg.onload = () => {
-          const ctx = document.getElementById("outputCanvas").getContext("2d");
-          ctx.drawImage(contentImg, 0, 0, 400, 400);
-        };
-      };
-      reader.readAsDataURL(file);
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.onload = () => URL.revokeObjectURL(img.src);
+      preview.innerHTML = '';
+      preview.appendChild(img);
+      imgElement = img;
+      result.innerHTML = '';
     });
-
-    // Apply chosen style
-    async function applyStyle(styleFile) {
-      if (!contentImg) {
-        alert("Please upload a content image first!");
-        return;
-      }
-      const styleImg = new Image();
-      styleImg.crossOrigin = "anonymous";
-      styleImg.src = "/home//assets/images/styles/" + styleFile;
-
-      styleImg.onload = async () => {
-        const bottleneck = await styleNet.predict(styleImg);
-        const stylized = await styleNet.stylize(contentImg, bottleneck);
-        stylized.toPixels(document.getElementById("outputCanvas"));
-      };
-    }
+    
+    styleButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!imgElement) {
+          alert('Please upload an image first.');
+          return;
+        }
+        const styleName = btn.dataset.style;
+        await loadModel(styleName);
+        styleTransferModel.transfer(imgElement, (err, styledImg) => {
+          if (err) {
+            console.error(err);
+            result.innerHTML = 'Error applying style.';
+            return;
+          }
+          const styledEl = document.createElement('img');
+          styledEl.src = styledImg.src;
+          styledEl.className = 'fade-in-up';
+          preview.innerHTML = '';
+          preview.appendChild(styledEl);
+          result.innerHTML = `Applied style: ${styleName}`;
+        });
+      });
+    });
   </script>
 </body>
 </html>
-
