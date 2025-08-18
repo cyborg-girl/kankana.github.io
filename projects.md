@@ -43,7 +43,7 @@ permalink: /projects/
   <p>
     Upload an image and see the AI predict what it contains.  
   </p>
-  <a href="/home/projects/face-expression.html" class="btn">🔍 Try it Live</a>
+  <a href="/home/projects/facial-expression.html" class="btn">🔍 Try it Live</a>
 </div>
 
 </div>
