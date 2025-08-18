@@ -71,10 +71,9 @@
       
       <input type="file" id="imageUpload" accept="image/*">
       <div class="controls">
-        <button data-style="starry-night">Starry Night</button>
-        <button data-style="kandinsky">Kandinsky</button>
-        <button data-style="mosaic">Mosaic</button>
-        <button data-style="water-lilies">Water Lilies</button>
+        <button data-style="wave">The Wave</button>
+        <button data-style="rain_princess">Rain Princess</button>
+        <button data-style="scream">The Scream</button>
       </div>
       
       <div class="preview" id="preview">
@@ -105,10 +104,9 @@
     
     // Local paths for style images
     const stylePaths = {
-      "starry-night": "/home/assets/images/styles/starry-night.jpg",
-      "kandinsky": "/home/assets/images/styles/kandinsky.jpg",
-      "mosaic": "/home/assets/images/styles/mosaic.jpg",
-      "water-lilies": "/home/assets/images/styles/water-lilies.jpg"
+      "wave": "/home/models/wave/",
+      "rain_princess": "/home/models/rain_princess/",
+      "scream": "/home/models/scream/"
     };
     
     async function loadModel(styleName) {
