@@ -1,156 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Image Style Transfer | My Portfolio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- CVless theme CSS -->
-  <link rel="stylesheet" href="/assets/css/main.css">
-  
-  <style>
-    :root {
-      --bg: #0d1117;
-      --card: rgba(22, 27, 34, 0.95);
-      --accent: #4cc9f0;
-      --muted: #bfc9d9;
-    }
-    body {
-      background: var(--bg);
-      color: #e6edf3;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-    }
-    #particles-js { position: fixed; width: 100%; height: 100%; top:0; left:0; z-index:-1; }
-    .wrap {
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 40px 20px;
-      text-align: center;
-    }
-    .card {
-      max-width: 900px;
-      width: 100%;
-      background: var(--card);
-      border-radius: 16px;
-      padding: 30px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-      backdrop-filter: blur(10px);
-      animation: fadeInUp 1s ease-out;
-    }
-    h1 { color: var(--accent); font-size: 2rem; margin-bottom: 10px; }
-    p { color: var(--muted); margin-bottom: 20px; }
-    .preview img { max-width: 100%; border-radius: 12px; margin-top: 15px; }
-    .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
-    button {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      background: linear-gradient(135deg, #4cc9f0, #1f6feb);
-      color: #fff;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-    }
-    button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(76,201,240,0.6); }
-    .result { margin-top: 20px; }
-    @keyframes fadeInUp { from { opacity:0; transform: translateY(20px);} to {opacity:1; transform:translateY(0);} }
-  </style>
+<meta charset="UTF-8">
+<title>Style Transfer Demo | Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- CVless theme CSS -->
+<link rel="stylesheet" href="/home/assets/css/main.css">
+
+<style>
+:root { --bg:#0d1117; --card:rgba(22,27,34,0.95); --accent:#4cc9f0; --muted:#bfc9d9; }
+
+body {
+  margin:0; padding:0; font-family:'Inter', sans-serif; background:var(--bg); color:#e6edf3;
+  overflow-x:hidden;
+}
+
+#particles-js { position:fixed; inset:0; z-index:-1; }
+
+.wrap { min-height:100vh; display:flex; justify-content:center; align-items:center; padding:50px 20px; }
+
+.card {
+  width:100%; max-width:1000px; background:var(--card); border-radius:16px; padding:30px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6); display:grid; grid-template-columns: 400px 1fr; gap:20px; align-items:start;
+  animation: fadeInUp 1s ease-out;
+}
+
+.left { display:flex; flex-direction:column; gap:12px; align-items:center; }
+.preview {
+  width:360px; height:360px; border-radius:12px; background:#111; display:flex; justify-content:center; align-items:center;
+  overflow:hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+}
+.preview img { width:100%; height:100%; object-fit:cover; }
+
+.controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+.btn { background:linear-gradient(135deg,var(--accent),#1f6feb); color:#fff; padding:10px 14px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
+.btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(76,201,240,0.6); }
+.btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.1); }
+
+.right h1 { margin:0 0 6px; color:var(--accent); font-size:1.6rem; }
+.right p.lead { color:var(--muted); margin-bottom:12px; }
+
+.results { margin-top:12px; background:rgba(0,0,0,0.1); border-radius:12px; padding:12px; min-height:60px; }
+
+@keyframes fadeInUp { from {opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+</style>
 </head>
+
 <body>
-  <div id="particles-js"></div>
-  
-  <div class="wrap">
-    <div class="card">
-      <h1>🎨 Image Style Transfer</h1>
-      <p>Upload an image and apply a famous art style! Uses <strong>ml5.js</strong> in-browser.</p>
-      
-      <input type="file" id="imageUpload" accept="image/*">
+<div id="particles-js"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="left">
+      <div class="preview" id="preview"><div class="small">No image uploaded</div></div>
       <div class="controls">
-        <button data-style="wave">The Wave</button>
-        <button data-style="rain_princess">Rain Princess</button>
-        <button data-style="scream">The Scream</button>
+        <label class="btn ghost">Upload Image
+          <input id="imageUpload" type="file" accept="image/*" style="display:none">
+        </label>
+        <button class="btn" id="clear">Clear</button>
       </div>
-      
-      <div class="preview" id="preview">
-        <div class="small">Your image will appear here</div>
+    </div>
+
+    <div class="right">
+      <h1>🎨 Style Transfer Demo</h1>
+      <p class="lead">Upload an image and apply artistic styles using pre-trained ML models.</p>
+
+      <div class="controls">
+        <button class="btn" data-style="/home/models/wave/">The Wave</button>
+        <button class="btn" data-style="/home/models/rain_princess/">Rain Princess</button>
+        <button class="btn" data-style="/home/models/scream/">The Scream</button>
       </div>
-      <div class="result" id="result"></div>
+
+      <div class="results" id="results">Results will appear here</div>
     </div>
   </div>
-  
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script>
-    particlesJS("particles-js", {
-      particles: { number: { value: 70 }, size: { value: 3 }, move: { speed: 1 }, line_linked: { enable: true, distance: 150, color: "#4cc9f0" }, color: { value: "#4cc9f0" } },
-      interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
-    });
-  </script>
-  
-  <!-- ml5.js -->
-  <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
-  
-  <script>
-    const styleButtons = document.querySelectorAll('button[data-style]');
-    const preview = document.getElementById('preview');
-    const result = document.getElementById('result');
-    let imgElement = null;
-    let styleTransferModel = null;
-    
-    // Local paths for style images
-    const stylePaths = {
-      "wave": "/home/models/wave/",
-      "rain_princess": "/home/models/rain_princess/",
-      "scream": "/home/models/scream/"
-    };
-    
-    async function loadModel(styleName) {
-      result.innerHTML = "Loading model...";
-      styleTransferModel = await ml5.styleTransfer(stylePaths[styleName], () => {
-        result.innerHTML = "Model loaded! Click Apply Style.";
+</div>
+
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+particlesJS("particles-js", {
+  particles:{number:{value:60},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},
+  interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
+});
+</script>
+
+<!-- TensorFlow.js + ml5 -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
+
+<script>
+const previewEl = document.getElementById('preview');
+const resultsEl = document.getElementById('results');
+const uploadInput = document.getElementById('imageUpload');
+const clearBtn = document.getElementById('clear');
+let currentImg = null;
+let styleNet = null;
+
+// Upload image
+uploadInput.addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(file);
+  img.onload = () => URL.revokeObjectURL(img.src);
+  img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+  previewEl.innerHTML=''; previewEl.appendChild(img);
+  currentImg = img;
+  resultsEl.textContent = 'Select a style to apply';
+});
+
+// Clear
+clearBtn.addEventListener('click', ()=>{
+  previewEl.innerHTML='<div class="small">No image uploaded</div>';
+  resultsEl.textContent='Results will appear here';
+  currentImg=null;
+});
+
+// Apply style
+document.querySelectorAll('.right .btn[data-style]').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    if(!currentImg){ alert('Upload an image first'); return; }
+    const styleName = btn.dataset.style;
+    resultsEl.textContent='Applying style...';
+    try {
+      styleNet = ml5.styleTransfer(`/assets/models/${styleName}/`, ()=>console.log(styleName+' loaded'));
+      await new Promise(res=>setTimeout(res,100)); // small delay
+      styleNet.transfer(currentImg, (err,result)=>{
+        if(err){ console.error(err); resultsEl.textContent='Error applying style'; return; }
+        previewEl.innerHTML=''; const outImg=document.createElement('img'); outImg.src=result.src;
+        outImg.style.width='100%'; outImg.style.height='100%'; outImg.style.objectFit='cover';
+        previewEl.appendChild(outImg);
+        resultsEl.textContent='Done!';
       });
-    }
-    
-    document.getElementById('imageUpload').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      img.onload = () => URL.revokeObjectURL(img.src);
-      preview.innerHTML = '';
-      preview.appendChild(img);
-      imgElement = img;
-      result.innerHTML = '';
-    });
-    
-    styleButtons.forEach(btn => {
-      btn.addEventListener('click', async () => {
-        if (!imgElement) {
-          alert('Please upload an image first.');
-          return;
-        }
-        const styleName = btn.dataset.style;
-        await loadModel(styleName);
-        styleTransferModel.transfer(imgElement, (err, styledImg) => {
-          if (err) {
-            console.error(err);
-            result.innerHTML = 'Error applying style.';
-            return;
-          }
-          const styledEl = document.createElement('img');
-          styledEl.src = styledImg.src;
-          styledEl.className = 'fade-in-up';
-          preview.innerHTML = '';
-          preview.appendChild(styledEl);
-          result.innerHTML = `Applied style: ${styleName}`;
-        });
-      });
-    });
-  </script>
+    } catch(e){ console.error(e); resultsEl.textContent='Failed to load style'; }
+  });
+});
+</script>
 </body>
 </html>
