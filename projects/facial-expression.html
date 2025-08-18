@@ -33,8 +33,8 @@ const overlayCtx = overlay.getContext('2d');
 async function loadModels() {
   try {
     statusText.textContent = 'Loading models...';
-    await faceapi.nets.tinyFaceDetector.loadFromUri('/home/models');
-    await faceapi.nets.faceExpressionNet.loadFromUri('/home/models');
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/home/models/');
+    await faceapi.nets.faceExpressionNet.loadFromUri('/home/models/');
     statusText.textContent = 'Models loaded ✅';
     startVideo();
   } catch (err) {
