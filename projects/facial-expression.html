@@ -1,173 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Face Expression Recognition | My Portfolio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+---
+layout: projects
+title: Face Expression Recognition
+---
 
-  <link rel="stylesheet" href="/assets/css/main.css">
+<div id="particles-js"></div>
 
-  <style>
-    body {
-      background-color: #0d0d0d;
-      color: #eee;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-    }
-    #particles-js {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      z-index: -1;
-    }
-    .container {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      text-align: center;
-    }
-    h1 {
-      font-size: 2.5rem;
-      color: #4cc9f0;
-      margin-bottom: 10px;
-      animation: fadeInDown 1s ease-out;
-    }
-    p {
-      max-width: 600px;
-      margin: 0 auto 20px;
-      color: #ccc;
-      animation: fadeIn 1.2s ease-out;
-    }
-    #video-container {
-      position: relative;
-      display: inline-block;
-    }
-    video {
-      border-radius: 12px;
-      margin-top: 20px;
-      box-shadow: 0px 0px 30px rgba(76, 201, 240, 0.3);
-      animation: fadeInUp 1.4s ease-out;
-    }
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #result {
-      margin-top: 25px;
-      font-size: 18px;
-      color: #f1faee;
-      background: rgba(29, 53, 87, 0.8);
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 600px;
-      text-align: center;
-      animation: fadeInUp 1.8s ease-out;
-    }
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-  </style>
-</head>
-<body>
-  <div id="particles-js"></div>
+<div class="project-container fade-in-up">
+  <h1>😊 Face Expression Recognition</h1>
+  <p>See your facial expression in real-time! 😎</p>
 
-  <div class="container">
-    <h1 class="title-glow">😀 Face Expression Recognition</h1>
-    <p class="subtitle">Watch as the AI detects your emotions in real time! 🚀</p>
-
-    <div id="video-container">
-      <video id="video" width="480" height="360" autoplay muted playsinline></video>
-      <canvas id="overlay"></canvas>
-    </div>
-
-    <div id="result"></div>
+  <div class="preview" style="position:relative; width:360px; height:360px; margin:0 auto;">
+    <video id="video" autoplay muted playsinline style="width:100%; height:100%; border-radius:12px;"></video>
+    <canvas id="overlay" style="position:absolute; top:0; left:0; width:100%; height:100%;"></canvas>
   </div>
 
-  <!-- Face API -->
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <div class="status" style="margin-top:12px;">Status: <span id="status-text">Loading models...</span></div>
+</div>
 
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('overlay');
-    const resultBox = document.getElementById('result');
+<!-- Theme CSS -->
+<link rel="stylesheet" href="/assets/css/main.css">
 
-    async function startVideo() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-      } catch (err) {
-        console.error("Camera access denied:", err);
-        resultBox.innerText = "⚠️ Please allow camera access.";
-      }
+<!-- Face API -->
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<script>
+const statusText = document.getElementById('status-text');
+const video = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+const overlayCtx = overlay.getContext('2d');
+
+// Load models from hosted CDN (works over HTTPS)
+async function loadModels() {
+  try {
+    statusText.textContent = 'Loading models...';
+    await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+    await faceapi.nets.faceExpressionNet.loadFromUri('/models');
+    statusText.textContent = 'Models loaded ✅';
+    startVideo();
+  } catch (err) {
+    console.error(err);
+    statusText.textContent = 'Failed to load models — check console';
+  }
+}
+
+// Start webcam
+async function startVideo() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    video.srcObject = stream;
+    video.onloadedmetadata = () => video.play();
+    detectExpressions();
+  } catch (err) {
+    console.error('Webcam error:', err);
+    statusText.textContent = 'Cannot access webcam. Make sure you are on HTTPS and allow camera access.';
+  }
+}
+
+// Detect expressions continuously
+async function detectExpressions() {
+  const displaySize = { width: video.videoWidth, height: video.videoHeight };
+  faceapi.matchDimensions(overlay, displaySize);
+
+  setInterval(async () => {
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+                                    .withFaceExpressions();
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
+    if (detections.length > 0) {
+      detections.forEach(det => {
+        const box = det.detection.box;
+        overlayCtx.strokeStyle = '#4cc9f0';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.strokeRect(box.x, box.y, box.width, box.height);
+
+        const expressions = det.expressions;
+        const sorted = Object.entries(expressions).sort((a,b)=>b[1]-a[1]);
+        overlayCtx.fillStyle = '#4cc9f0';
+        overlayCtx.font = '16px Inter';
+        overlayCtx.fillText(sorted[0][0], box.x, box.y > 20 ? box.y-5 : box.y+15);
+      });
     }
+  }, 200);
+}
 
-    async function loadModels() {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-      await faceapi.nets.faceExpressionNet.loadFromUri('/models');
-      startVideo();
-    }
+loadModels();
+</script>
 
-    video.addEventListener('play', () => {
-      const displaySize = { width: video.width, height: video.height };
-      faceapi.matchDimensions(canvas, displaySize);
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 70 },
+    size: { value: 3 },
+    move: { speed: 1 },
+    line_linked: { enable: true, distance: 140, color: "#4cc9f0" },
+    color: { value: "#4cc9f0" }
+  },
+  interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
+});
+</script>
 
-      setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(
-          video,
-          new faceapi.TinyFaceDetectorOptions()
-        ).withFaceExpressions();
-
-        const resized = faceapi.resizeResults(detections, displaySize);
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        faceapi.draw.drawDetections(canvas, resized);
-        faceapi.draw.drawFaceExpressions(canvas, resized);
-
-        if (detections.length > 0) {
-          const expressions = detections[0].expressions;
-          const maxExp = Object.entries(expressions).reduce((a, b) => a[1] > b[1] ? a : b);
-          resultBox.innerHTML = `Most likely expression: <strong>${maxExp[0]}</strong> (${(maxExp[1]*100).toFixed(2)}%)`;
-        } else {
-          resultBox.innerHTML = "No face detected.";
-        }
-      }, 200);
-    });
-
-    loadModels();
-  </script>
-
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script>
-    particlesJS("particles-js", {
-      particles: {
-        number: { value: 70 },
-        size: { value: 3 },
-        move: { speed: 1 },
-        line_linked: { enable: true, distance: 150, color: "#4cc9f0" },
-        color: { value: "#4cc9f0" }
-      },
-      interactivity: {
-        events: { onhover: { enable: true, mode: "repulse" } }
-      }
-    });
-  </script>
-</body>
-</html>
+<style>
+.project-container {
+  max-width: 600px;
+  margin: 80px auto;
+  padding: 30px;
+  text-align: center;
+  background: rgba(22,27,34,0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+}
+h1 { color:#4cc9f0; }
+.status { color:#ccc; font-size:0.95rem; }
+.fade-in-up { animation: fadeInUp 1s ease-out; }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+</style>
