@@ -5,7 +5,6 @@
   <title>Face Expression Recognition | My Portfolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Theme stylesheet -->
   <link rel="stylesheet" href="/assets/css/main.css">
 
   <style>
@@ -26,7 +25,6 @@
       z-index: -1;
     }
     .container {
-      position: relative;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -46,6 +44,10 @@
       margin: 0 auto 20px;
       color: #ccc;
       animation: fadeIn 1.2s ease-out;
+    }
+    #video-container {
+      position: relative;
+      display: inline-block;
     }
     video {
       border-radius: 12px;
@@ -69,8 +71,6 @@
       text-align: center;
       animation: fadeInUp 1.8s ease-out;
     }
-
-    /* Animations */
     @keyframes fadeInDown {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -86,14 +86,17 @@
   </style>
 </head>
 <body>
-  <!-- Background animation -->
   <div id="particles-js"></div>
 
   <div class="container">
     <h1 class="title-glow">😀 Face Expression Recognition</h1>
     <p class="subtitle">Watch as the AI detects your emotions in real time! 🚀</p>
 
-    <video id="video" width="480" height="360" autoplay muted></video>
+    <div id="video-container">
+      <video id="video" width="480" height="360" autoplay muted playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
+
     <div id="result"></div>
   </div>
 
@@ -102,13 +105,16 @@
 
   <script>
     const video = document.getElementById('video');
+    const canvas = document.getElementById('overlay');
+    const resultBox = document.getElementById('result');
 
     async function startVideo() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
       } catch (err) {
         console.error("Camera access denied:", err);
+        resultBox.innerText = "⚠️ Please allow camera access.";
       }
     }
 
@@ -119,9 +125,6 @@
     }
 
     video.addEventListener('play', () => {
-      const canvas = faceapi.createCanvasFromMedia(video);
-      document.body.append(canvas);
-
       const displaySize = { width: video.width, height: video.height };
       faceapi.matchDimensions(canvas, displaySize);
 
@@ -131,19 +134,18 @@
           new faceapi.TinyFaceDetectorOptions()
         ).withFaceExpressions();
 
-        const resizedDetections = faceapi.resizeResults(detections, displaySize);
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+        const resized = faceapi.resizeResults(detections, displaySize);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        faceapi.draw.drawDetections(canvas, resized);
+        faceapi.draw.drawFaceExpressions(canvas, resized);
 
-        // Display the most likely expression
         if (detections.length > 0) {
           const expressions = detections[0].expressions;
           const maxExp = Object.entries(expressions).reduce((a, b) => a[1] > b[1] ? a : b);
-          document.getElementById("result").innerHTML =
-            `Most likely expression: <strong>${maxExp[0]}</strong> (${(maxExp[1]*100).toFixed(2)}%)`;
+          resultBox.innerHTML = `Most likely expression: <strong>${maxExp[0]}</strong> (${(maxExp[1]*100).toFixed(2)}%)`;
         } else {
-          document.getElementById("result").innerHTML = "No face detected.";
+          resultBox.innerHTML = "No face detected.";
         }
       }, 200);
     });
@@ -151,7 +153,7 @@
     loadModels();
   </script>
 
-  <!-- Particles.js animation -->
+  <!-- Particles.js -->
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script>
     particlesJS("particles-js", {
