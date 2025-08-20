@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>AI Style Transfer | Kankana Shukla</title>
-  <link rel="stylesheet" href="/home/assets/styles/style.css">
+  <link rel="stylesheet" href="/home/assets/css/main.css">
 
   <!-- Libraries -->
   <script src="/home/libraries/p5.min.js"></script>
@@ -11,7 +11,16 @@
   <script src="/home/libraries/ml5.min.js"></script>
 
   <!-- Animation library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>  -->
+
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script>
+  particlesJS("particles-js", {
+    particles:{number:{value:60},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},
+    interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
+  });
+  </script>
 
   <style>
     body {
