@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Style Transfer | My Portfolio</title>
+  <title>Style Transfer - CVless Theme</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="/home/libraries/p5.min.js"></script>
   <script src="/home/libraries/p5.dom.min.js"></script>
@@ -108,41 +108,40 @@
     .credits a:hover {
       text-decoration: underline;
     }
+    #input-img, #style-img {
+      max-width: 250px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
 
-  <h1 class="animate__animated animate__fadeInDown">Neural Style Transfer</h1>
+  <h1 class="animate__animated animate__fadeInDown">Style Transfer | My Portfolio</h1>
 
   <div class="body-container animate__animated animate__fadeInUp">
     <!-- Input Section -->
     <div class="white-box col-3">
       <h3>INPUT</h3>
       <div class="center-container">
-        <img id="input-img" src='/home/images/girlwithpearl.jpg' width="250"/>
-      </div>
-      <div class="style-container">
-        <img class="image" src='/home/images/starrynight.jpg' onclick="updateInputImg(this)">
-        <img class="image" src='/home/images/sunflower.jpg' onclick="updateInputImg(this)">
-        <img class="image" src='/home/images/monalisa.jpg' onclick="updateInputImg(this)">
+        <img id="input-img" src="" alt="No input selected" style="display:none;"/>
       </div>
       <input id="uploader" type="file" accept="image/*">
       <button class="start-btn" onclick="useWebcam()">Use Webcam</button>
-      <button class="start-btn" onclick="onPredictClick()">Transfer Style</button>
     </div>
 
     <!-- Style Section -->
     <div class="white-box col-3">
       <h3>STYLE</h3>
       <div class="center-container">
-        <img id="style-img" src='/home/images/wave.jpg' width="250"/>
+        <img id="style-img" src="" alt="No style selected" style="display:none;"/>
       </div>
       <div class="style-container">
         <img class="image" src='/home/images/wave.jpg' onclick="updateStyleImg(this)">
         <img class="image" src='/home/images/la_muse.jpg' onclick="updateStyleImg(this)">
         <img class="image" src='/home/images/rain_princess.jpg' onclick="updateStyleImg(this)">
       </div>
+      <button class="start-btn" onclick="onPredictClick()">Transfer Style</button>
     </div>
 
     <!-- Output Section -->
@@ -157,7 +156,7 @@
     Inspired by <a href="https://github.com/reiinakano">reiinakano</a>.
   </div>
 
-  <script src="sketch.js"></script>
+  <script src="/home/models/sketch.js"></script>
 
   <script>
     // Particles.js config
@@ -194,14 +193,32 @@
       "retina_detect": true
     });
 
-    // Update input image
+    // Preview uploaded input image
+    document.getElementById("uploader").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const imgEl = document.getElementById("input-img");
+          imgEl.src = evt.target.result;
+          imgEl.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
     function updateInputImg(el) {
-      document.getElementById("input-img").src = el.src;
+      const imgEl = document.getElementById("input-img");
+      imgEl.src = el.src;
+      imgEl.style.display = "block";
     }
-    // Update style image
+
     function updateStyleImg(el) {
-      document.getElementById("style-img").src = el.src;
+      const imgEl = document.getElementById("style-img");
+      imgEl.src = el.src;
+      imgEl.style.display = "block";
     }
+
     function useWebcam() {
       alert("Webcam integration coming in sketch.js");
     }
