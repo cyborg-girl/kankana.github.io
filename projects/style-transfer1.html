@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI Style Transfer | Kankana Shukla</title>
+  <title>Style Transfer Demo | Portfolio</title>
   <link rel="stylesheet" href="/home/assets/css/main.css">
 
   <!-- Libraries -->
@@ -10,17 +10,88 @@
   <script src="/home/libraries/p5.dom.min.js"></script>
   <script src="/home/libraries/ml5.min.js"></script>
 
+  <style>
+:root { --bg:#0d1117; --card:rgba(22,27,34,0.95); --accent:#4cc9f0; --muted:#bfc9d9; }
+
+body {
+  margin:0; padding:0; font-family:'Inter', sans-serif; background:var(--bg); color:#e6edf3;
+  overflow-x:hidden;
+}
+
+#particles-js { position:fixed; inset:0; z-index:-1; }
+
+.wrap { min-height:100vh; display:flex; justify-content:center; align-items:center; padding:50px 20px; }
+
+.card {
+  width:100%; max-width:1000px; background:var(--card); border-radius:16px; padding:30px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6); display:grid; grid-template-columns: 400px 1fr; gap:20px; align-items:start;
+  animation: fadeInUp 1s ease-out;
+}
+
+.left { display:flex; flex-direction:column; gap:12px; align-items:center; }
+.preview {
+  width:360px; height:360px; border-radius:12px; background:#111; display:flex; justify-content:center; align-items:center;
+  overflow:hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+}
+.preview img { width:100%; height:100%; object-fit:cover; }
+
+.controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+.btn { background:linear-gradient(135deg,var(--accent),#1f6feb); color:#fff; padding:10px 14px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
+.btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(76,201,240,0.6); }
+.btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.1); }
+
+.right h1 { margin:0 0 6px; color:var(--accent); font-size:1.6rem; }
+.right p.lead { color:var(--muted); margin-bottom:12px; }
+
+.results { margin-top:12px; background:rgba(0,0,0,0.1); border-radius:12px; padding:12px; min-height:60px; }
+
+@keyframes fadeInUp { from {opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+</style>
+</head>
+
+  <body>
+<div id="particles-js"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="left">
+      <div class="preview" id="preview"><div class="small">No image uploaded</div></div>
+      <div class="controls">
+        <label class="btn ghost">Upload Image
+          <input id="imageUpload" type="file" accept="image/*" style="display:none">
+        </label>
+        <button class="btn" id="clear">Clear</button>
+      </div>
+    </div>
+
+    <div class="right">
+      <h1>🎨 Style Transfer Demo</h1>
+      <p class="lead">Upload an image and apply artistic styles using pre-trained ML models.</p>
+
+      <div class="controls">
+        <button class="btn" data-style="/home/models/wave">The Wave</button>
+        <button class="btn" data-style="/home/models/rain_princess">Rain Princess</button>
+        <button class="btn" data-style="/home/models/scream">The Scream</button>
+      </div>
+
+      <div class="results" id="results">Results will appear here</div>
+    </div>
+  </div>
+</div>
+
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+particlesJS("particles-js", {
+  particles:{number:{value:60},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},
+  interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
+});
+</script>
+
   <!-- Animation library -->
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>  -->
 
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script>
-  particlesJS("particles-js", {
-    particles:{number:{value:60},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},
-    interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
-  });
-  </script>
 
   <style>
     body {
