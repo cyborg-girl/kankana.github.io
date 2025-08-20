@@ -2,159 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Style Transfer Demo | Portfolio</title>
-  <link rel="stylesheet" href="/home/assets/css/main.css">
-
-  <!-- Libraries -->
+  <title>Style Transfer | My Portfolio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="/home/libraries/p5.min.js"></script>
   <script src="/home/libraries/p5.dom.min.js"></script>
   <script src="/home/libraries/ml5.min.js"></script>
-
-  <style>
-:root { --bg:#0d1117; --card:rgba(22,27,34,0.95); --accent:#4cc9f0; --muted:#bfc9d9; }
-
-body {
-  margin:0; padding:0; font-family:'Inter', sans-serif; background:var(--bg); color:#e6edf3;
-  overflow-x:hidden;
-}
-
-#particles-js { position:fixed; inset:0; z-index:-1; }
-
-.wrap { min-height:100vh; display:flex; justify-content:center; align-items:center; padding:50px 20px; }
-
-.card {
-  width:100%; max-width:1000px; background:var(--card); border-radius:16px; padding:30px;
-  box-shadow:0 8px 30px rgba(0,0,0,0.6); display:grid; grid-template-columns: 400px 1fr; gap:20px; align-items:start;
-  animation: fadeInUp 1s ease-out;
-}
-
-.left { display:flex; flex-direction:column; gap:12px; align-items:center; }
-.preview {
-  width:360px; height:360px; border-radius:12px; background:#111; display:flex; justify-content:center; align-items:center;
-  overflow:hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
-}
-.preview img { width:100%; height:100%; object-fit:cover; }
-
-.controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
-
-.btn { background:linear-gradient(135deg,var(--accent),#1f6feb); color:#fff; padding:10px 14px; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
-.btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(76,201,240,0.6); }
-.btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.1); }
-
-.right h1 { margin:0 0 6px; color:var(--accent); font-size:1.6rem; }
-.right p.lead { color:var(--muted); margin-bottom:12px; }
-
-.results { margin-top:12px; background:rgba(0,0,0,0.1); border-radius:12px; padding:12px; min-height:60px; }
-
-@keyframes fadeInUp { from {opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
-</style>
-</head>
-
-  <body>
-<div id="particles-js"></div>
-
-<div class="wrap">
-  <div class="card">
-    <div class="left">
-      <div class="preview" id="preview"><div class="small">No image uploaded</div></div>
-      <div class="controls">
-        <label class="btn ghost">Upload Image
-          <input id="imageUpload" type="file" accept="image/*" style="display:none">
-        </label>
-        <button class="btn" id="clear">Clear</button>
-      </div>
-    </div>
-
-    <div class="right">
-      <h1>🎨 Style Transfer Demo</h1>
-      <p class="lead">Upload an image and apply artistic styles using pre-trained ML models.</p>
-
-      <div class="controls">
-        <button class="btn" data-style="/home/models/wave">The Wave</button>
-        <button class="btn" data-style="/home/models/rain_princess">Rain Princess</button>
-        <button class="btn" data-style="/home/models/scream">The Scream</button>
-      </div>
-
-      <div class="results" id="results">Results will appear here</div>
-    </div>
-  </div>
-</div>
-
-<!-- Particles.js -->
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-<script>
-particlesJS("particles-js", {
-  particles:{number:{value:60},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},
-  interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
-});
-</script>
-
-  <!-- Animation library -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>  -->
-
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
   <style>
     body {
-      font-family: "Helvetica Neue", Arial, sans-serif;
-      background: linear-gradient(135deg, #f8f9fb, #e6ecf5);
       margin: 0;
-      padding: 0;
-      color: #333;
+      font-family: 'Poppins', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      overflow-x: hidden;
     }
-
     h1, h3 {
       text-align: center;
-      color: #222;
+      color: #58a6ff;
     }
-
     .body-container {
       display: flex;
       justify-content: center;
+      align-items: flex-start;
       gap: 20px;
+      margin-top: 100px;
       padding: 20px;
+      z-index: 1;
+      position: relative;
     }
-
     .white-box {
-      background: #fff;
-      border-radius: 20px;
+      background: #161b22;
       padding: 20px;
-      box-shadow: 0px 8px 20px rgba(0,0,0,0.1);
-      flex: 1;
-      min-width: 300px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     .white-box:hover {
       transform: translateY(-5px);
-      box-shadow: 0px 12px 30px rgba(0,0,0,0.15);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
     }
-
+    .col-3 {
+      flex: 1;
+      max-width: 30%;
+    }
     .center-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-bottom: 15px;
+      margin: 15px 0;
     }
-
-    img.image {
-      width: 90px;
-      height: 90px;
-      border-radius: 15px;
+    .image {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    img.image:hover {
+    .image:hover {
       transform: scale(1.1);
-      box-shadow: 0px 6px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 0 10px #58a6ff;
     }
-
-    #input-img, #style-img {
-      width: 220px;
-      height: 220px;
-      border-radius: 20px;
-      object-fit: cover;
-      box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
-    }
-
     .style-container {
       display: flex;
       justify-content: center;
@@ -162,128 +70,143 @@ particlesJS("particles-js", {
       margin: 10px 0;
       flex-wrap: wrap;
     }
-
     .start-btn {
-      padding: 12px 18px;
-      background: #4e73df;
+      display: inline-block;
+      background: #238636;
       color: white;
+      padding: 12px 20px;
+      margin-top: 15px;
+      border-radius: 8px;
       border: none;
-      border-radius: 12px;
+      font-size: 14px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s ease, transform 0.2s ease;
+      transition: background 0.3s ease;
     }
     .start-btn:hover {
-      background: #2e59d9;
-      transform: scale(1.05);
+      background: #2ea043;
     }
-
+    #particles-js {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0d1117;
+      z-index: 0;
+    }
     .credits {
       text-align: center;
-      padding: 15px;
-      margin-top: 20px;
-      font-size: 14px;
-      color: #555;
+      padding: 20px;
+      font-size: 12px;
+      color: #8b949e;
+      position: relative;
+      z-index: 1;
     }
     .credits a {
-      color: #4e73df;
+      color: #58a6ff;
       text-decoration: none;
-      font-weight: bold;
     }
     .credits a:hover {
       text-decoration: underline;
     }
   </style>
 </head>
-
 <body>
-  <h1 class="center-text">🎨 AI Style Transfer</h1>
+  <div id="particles-js"></div>
 
-  <div class="body-container">
-    
-    <!-- INPUT -->
+  <h1 class="animate__animated animate__fadeInDown">Neural Style Transfer</h1>
+
+  <div class="body-container animate__animated animate__fadeInUp">
+    <!-- Input Section -->
     <div class="white-box col-3">
       <h3>INPUT</h3>
       <div class="center-container">
-        <img id="input-img" src="/home/images/girlwithpearl.jpg"/>
+        <img id="input-img" src='/home/images/girlwithpearl.jpg' width="250"/>
       </div>
       <div class="style-container">
-        <img class="image" src="/home/images/girlwithpearl.jpg" onclick="updateInputImg(this)">
-        <img class="image" src="/home/images/starrynight.jpg" onclick="updateInputImg(this)">
-        <img class="image" src="/home/images/sunflower.jpg" onclick="updateInputImg(this)">
+        <img class="image" src='/home/images/starrynight.jpg' onclick="updateInputImg(this)">
+        <img class="image" src='/home/images/sunflower.jpg' onclick="updateInputImg(this)">
+        <img class="image" src='/home/images/monalisa.jpg' onclick="updateInputImg(this)">
       </div>
-      <div class="style-container">
-        <input id="uploader" type="file" accept="image/*">
-        <button class="start-btn" onclick="useWebcam()">Use Webcam</button>
-      </div>
+      <input id="uploader" type="file" accept="image/*">
+      <button class="start-btn" onclick="useWebcam()">Use Webcam</button>
+      <button class="start-btn" onclick="onPredictClick()">Transfer Style</button>
     </div>
 
-    <!-- STYLE -->
+    <!-- Style Section -->
     <div class="white-box col-3">
       <h3>STYLE</h3>
       <div class="center-container">
-        <img id="style-img" src="/home/images/wave.jpg">
+        <img id="style-img" src='/home/images/wave.jpg' width="250"/>
       </div>
       <div class="style-container">
-        <img class="image" src="/home/images/wave.jpg" onclick="updateStyleImg(this)">
-        <img class="image" src="/home/images/la_muse.jpg" onclick="updateStyleImg(this)">
-        <img class="image" src="/home/images/udnie.jpg" onclick="updateStyleImg(this)">
+        <img class="image" src='/home/images/wave.jpg' onclick="updateStyleImg(this)">
+        <img class="image" src='/home/images/la_muse.jpg' onclick="updateStyleImg(this)">
+        <img class="image" src='/home/images/rain_princess.jpg' onclick="updateStyleImg(this)">
       </div>
     </div>
 
-    <!-- OUTPUT -->
+    <!-- Output Section -->
     <div class="white-box col-3">
       <h3>OUTPUT</h3>
       <div id="output-img-container" class="center-container"></div>
-      <div class="style-container">
-        <button class="start-btn" onclick="onPredictClick()">Transfer My Image</button>
-      </div>
     </div>
   </div>
 
-  <!-- Credits -->
   <div class="credits">
-    Built by <a href="https://kankanashukla.github.io/home/" target="_blank">Kankana Shukla</a> with 
-    <a href="https://ml5js.org" target="_blank">ML5.js</a>. 
-    <br> View <a href="https://kankanashukla.github.io/home/projects/style-transfer1.html" target="_blank">Code</a> on GitHub.
+    Built by <a href="https://1023.io">Kankana Shukla</a> with ML5.js & p5.js.  
+    Inspired by <a href="https://github.com/reiinakano">reiinakano</a>.
   </div>
 
+  <script src="sketch.js"></script>
+
   <script>
-    let inputImg = document.getElementById("input-img");
-    let styleImg = document.getElementById("style-img");
-    let outputContainer = document.getElementById("output-img-container");
-    let style;
-    
+    // Particles.js config
+    particlesJS("particles-js", {
+      "particles": {
+        "number": { "value": 80 },
+        "color": { "value": "#58a6ff" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5 },
+        "size": { "value": 3 },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#58a6ff",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 3,
+          "direction": "none",
+          "out_mode": "out"
+        }
+      },
+      "interactivity": {
+        "events": {
+          "onhover": { "enable": true, "mode": "grab" },
+          "onclick": { "enable": true, "mode": "push" }
+        },
+        "modes": {
+          "grab": { "distance": 200, "line_linked": { "opacity": 0.7 } }
+        }
+      },
+      "retina_detect": true
+    });
+
+    // Update input image
     function updateInputImg(el) {
-      inputImg.src = el.src;
-      gsap.fromTo(inputImg, {scale:0.9, opacity:0.5}, {scale:1, opacity:1, duration:0.6, ease:"back.out(1.7)"});
+      document.getElementById("input-img").src = el.src;
     }
+    // Update style image
     function updateStyleImg(el) {
-      styleImg.src = el.src;
-      gsap.fromTo(styleImg, {rotation:-10, opacity:0.5}, {rotation:0, opacity:1, duration:0.6, ease:"power2.out"});
+      document.getElementById("style-img").src = el.src;
     }
-
     function useWebcam() {
-      alert("Webcam functionality coming soon 🚀");
+      alert("Webcam integration coming in sketch.js");
     }
-
     function onPredictClick() {
-      outputContainer.innerHTML = "<p>Applying style... Please wait</p>";
-      // Example: using pre-downloaded models in /home/assets/models/
-      style = ml5.styleTransfer('/home/assets/models/wave', modelLoaded);
-    }
-
-    function modelLoaded() {
-      style.transfer(inputImg, function(err, result) {
-        if (err) { console.error(err); return; }
-        let newImg = document.createElement("img");
-        newImg.src = result.src;
-        newImg.style.maxWidth = "220px";
-        newImg.style.borderRadius = "20px";
-        gsap.fromTo(newImg, {opacity:0, y:20}, {opacity:1, y:0, duration:0.8});
-        outputContainer.innerHTML = "";
-        outputContainer.appendChild(newImg);
-      });
+      alert("Triggering style transfer (sketch.js handles this)");
     }
   </script>
 </body>
