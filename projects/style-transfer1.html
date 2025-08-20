@@ -2,179 +2,199 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Style Transfer | Portfolio Demo</title>
+<title>Fast Style Transfer — CVless Theme</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- CVless theme dark colors -->
+<!-- CVless theme CSS -->
+<link rel="stylesheet" href="/assets/css/main.css">
+
 <style>
-  :root{
-    --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent:#4cc9f0; --muted:#bfc9d9;
-  }
-  html,body{height:100%; margin:0; background:var(--bg); color:#fff; font-family:"Inter","Helvetica Neue",Arial,sans-serif;}
-  #particles-js{position:fixed; inset:0; z-index:-1;}
-  .wrap{min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:48px 20px;}
-  .card{width:100%; max-width:1200px; background:var(--card); border-radius:16px; padding:28px; box-shadow:0 12px 40px rgba(0,0,0,0.6); display:grid; gap:18px; grid-template-columns: 1fr 1fr; align-items:start;}
-  h1{color:var(--accent); margin:0 0 12px;}
-  .section{margin-bottom:20px;}
-  .input-preview,.style-preview,.output-preview{border-radius:12px; background:#111; width:100%; height:320px; display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:12px; box-shadow: inset 0 0 40px rgba(0,0,0,0.6);}
-  .input-preview img,.style-preview img,.output-preview img{width:100%; height:100%; object-fit:cover;}
-  .thumbnails{display:flex; flex-wrap:wrap; gap:8px;}
-  .thumbnails img{width:80px; height:80px; object-fit:cover; cursor:pointer; border-radius:8px; transition:0.2s; border:2px solid transparent;}
-  .thumbnails img.selected{border-color:var(--accent);}
-  .btn{background:linear-gradient(135deg,var(--accent),#4895ef); color:#0b1020; padding:10px 16px; border-radius:10px; font-weight:700; border:none; cursor:pointer;}
-  .status{margin-top:10px;color:var(--muted);}
+:root{
+  --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent:#4cc9f0; --muted:#bfc9d9;
+}
+html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;}
+#particles-js{position:fixed;inset:0;z-index:-1;}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:48px 20px;box-sizing:border-box;flex-direction:column;}
+.card{width:100%;max-width:1200px;background:var(--card);border-radius:16px;padding:28px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:grid;gap:18px;grid-template-columns:1fr 1fr;align-items:start;}
+.left,.right{display:flex;flex-direction:column;gap:12px;}
+.preview{width:100%;height:360px;border-radius:12px;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow: inset 0 0 40px rgba(0,0,0,0.6);}
+.preview img, .preview video{width:100%;height:100%;object-fit:cover;}
+.controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.btn{background:linear-gradient(135deg,var(--accent),#4895ef);color:#0b1020;padding:10px 14px;border-radius:10px;font-weight:700;border:none;cursor:pointer;}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.06);}
+.btn.warn{background:#ef476f;color:#fff;}
+h1{margin:0 0 6px;color:var(--accent);font-size:1.6rem;}
+p.lead{margin:0 0 12px;color:var(--muted);}
+.results{background:rgba(0,0,0,0.12);padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:6px;}
+.result-item{display:flex;justify-content:space-between;gap:12px;padding:6px 4px;align-items:center;border-bottom:1px dashed rgba(255,255,255,0.04);}
+.result-item:last-child{border-bottom:none;}
+.confidence{font-weight:700;color:#dff7ff;}
+.status{margin-top:10px;color:var(--muted);font-size:0.95rem;}
+.small{font-size:0.9rem;color:var(--muted);}
+.image-grid{display:flex;flex-wrap:wrap;gap:10px;}
+.image-grid img{width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:pointer;transition:0.2s;}.image-grid img:hover{transform:scale(1.05);}
+@media(max-width:980px){.card{grid-template-columns:1fr;}}
 </style>
 
-<!-- Libraries -->
-<script src="/home/libraries/p5.min.js"></script>
-<script src="/home/libraries/p5.dom.min.js"></script>
-<script src="/home/libraries/ml5.min.js"></script>
+<!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-</head>
-<body>
 
+<!-- p5.js + ml5.js v0.11.1 -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.11.1/dist/ml5.min.js"></script>
+</head>
+
+<body>
 <div id="particles-js"></div>
 
 <div class="wrap">
-  <h1>🎨 Fast Style Transfer</h1>
   <div class="card">
-
-    <!-- Input Section -->
-    <div class="section">
-      <h2>Input</h2>
-      <div class="input-preview" id="input-preview">
-        <span class="muted">No image selected</span>
+    <div class="left">
+      <h1>Input Image / Webcam</h1>
+      <div class="preview" id="preview">
+        <div class="small" id="placeholder">No image uploaded</div>
       </div>
-      <input type="file" id="input-upload" accept="image/*">
-      <button class="btn" onclick="useWebcam()">Use Webcam</button>
-      <div class="status" id="input-status"></div>
+      <div class="controls">
+        <input type="file" id="upload" accept="image/*" style="display:none">
+        <button class="btn ghost" id="uploadBtn">Upload Image</button>
+        <button class="btn ghost" id="webcamBtn">Use Webcam</button>
+        <button class="btn ghost" id="captureBtn" disabled>Capture</button>
+        <button class="btn" id="clearBtn">Clear</button>
+      </div>
+      <div class="status small" id="status">Status: Idle</div>
     </div>
 
-    <!-- Style Section -->
-    <div class="section">
-      <h2>Style</h2>
-      <div class="style-preview" id="style-preview">
-        <span class="muted">No style selected</span>
+    <div class="right">
+      <h1>Style Transfer</h1>
+      <div class="image-grid" id="styleGrid">
+        <!-- Style images will be populated here -->
       </div>
-      <div class="thumbnails" id="style-thumbnails"></div>
-      <button class="btn" id="transfer-btn" onclick="transferStyle()" disabled>Transfer Style</button>
-      <div class="status" id="style-status"></div>
-    </div>
-
-    <!-- Output Section -->
-    <div class="section">
-      <h2>Output</h2>
-      <div class="output-preview" id="output-preview">
-        <span class="muted">Results will appear here</span>
+      <button class="btn" id="transferBtn" disabled>Transfer Style</button>
+      <div class="results" id="outputPreview">
+        <div class="small">Result will appear here</div>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
-  // Particles.js animation
-  particlesJS("particles-js", {
-    particles:{number:{value:70}, size:{value:3}, move:{speed:1}, line_linked:{enable:true, distance:140, color:"#4cc9f0"}, color:{value:"#4cc9f0"}},
-    interactivity:{events:{onhover:{enable:true, mode:"repulse"}}}
-  });
+// Initialize particles
+particlesJS("particles-js",{particles:{number:{value:70},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}});
 
-  let styleTransfer;
-  let inputImgElement;
-  let selectedStyleModel = null;
+// DOM elements
+const preview = document.getElementById('preview');
+const placeholder = document.getElementById('placeholder');
+const upload = document.getElementById('upload');
+const uploadBtn = document.getElementById('uploadBtn');
+const webcamBtn = document.getElementById('webcamBtn');
+const captureBtn = document.getElementById('captureBtn');
+const clearBtn = document.getElementById('clearBtn');
+const transferBtn = document.getElementById('transferBtn');
+const styleGrid = document.getElementById('styleGrid');
+const outputPreview = document.getElementById('outputPreview');
+const statusEl = document.getElementById('status');
 
-  // Detect available images automatically
-  const inputImages = [
-    "girlwithpearl.jpg",
-    "starrynight.jpg",
-    "sunflower.jpg",
-    "monalisa.jpg"
-  ];
-  const styleImages = [
-    "udnie.jpg",
-    "rain_princess.jpg",
-    "scream.jpg",
-    "wave.jpg"
-  ];
+let currentImageEl = null;
+let videoStream = null;
+let styleTransfer = null;
+let selectedStyleModel = "";
 
-  const styleThumbnailsContainer = document.getElementById("style-thumbnails");
-  const stylePreview = document.getElementById("style-preview");
-  const transferBtn = document.getElementById("transfer-btn");
+// Populate styles from /home/images/styles
+const styleNames = ['starry-night','mosaic','scream','udnie']; // adjust with your actual style folders
+styleNames.forEach(name=>{
+  const img = document.createElement('img');
+  img.src = `/home/images/${name}.jpg`;
+  img.title = name;
+  img.addEventListener('click', ()=>selectStyle(name,img));
+  styleGrid.appendChild(img);
+});
 
-  // Populate style thumbnails
-  styleImages.forEach(name=>{
-    const img = document.createElement("img");
-    img.src = "/home/images/" + name;
-    img.title = name.split(".")[0];
-    img.onclick = () => selectStyle(img, name);
-    styleThumbnailsContainer.appendChild(img);
-  });
+function selectStyle(name,imgEl){
+  selectedStyleModel = `/home/models/${name}/`;
+  Array.from(styleGrid.children).forEach(i=>i.style.border="");
+  imgEl.style.border="2px solid var(--accent)";
+  transferBtn.disabled = false;
+}
 
-  function selectStyle(img, name){
-    // highlight
-    document.querySelectorAll("#style-thumbnails img").forEach(i=>i.classList.remove("selected"));
-    img.classList.add("selected");
-    stylePreview.innerHTML="";
-    const previewImg = document.createElement("img");
-    previewImg.src = img.src;
-    stylePreview.appendChild(previewImg);
-    selectedStyleModel = "/home/models/" + name.split(".")[0] + "/";
+// Upload image
+uploadBtn.addEventListener('click', ()=>upload.click());
+upload.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  stopWebcam();
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(f);
+  img.onload = ()=>URL.revokeObjectURL(img.src);
+  showPreview(img);
+});
+
+// Webcam
+webcamBtn.addEventListener('click', async ()=>{
+  if(videoStream){stopWebcam();return;}
+  try{
+    videoStream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    const video = document.createElement('video');
+    video.autoplay = true; video.muted=true; video.playsInline=true;
+    video.srcObject = videoStream;
+    await video.play();
+    showPreview(video);
+    captureBtn.disabled = false;
+  } catch(err){console.error(err); alert('Could not access webcam.');}
+});
+
+captureBtn.addEventListener('click', ()=>{
+  if(!currentImageEl || currentImageEl.tagName!=='VIDEO') return;
+  const video=currentImageEl;
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+  const img=document.createElement('img');
+  img.src=canvas.toDataURL('image/jpeg');
+  showPreview(img);
+  stopWebcam();
+});
+
+clearBtn.addEventListener('click', ()=>{
+  stopWebcam();
+  preview.innerHTML='<div class="small" id="placeholder">No image uploaded</div>';
+  currentImageEl=null;
+  outputPreview.innerHTML='<div class="small">Result will appear here</div>';
+  transferBtn.disabled = true;
+  selectedStyleModel="";
+  Array.from(styleGrid.children).forEach(i=>i.style.border="");
+});
+
+function showPreview(el){
+  preview.innerHTML=''; preview.appendChild(el);
+  currentImageEl = el;
+}
+
+// Stop webcam
+function stopWebcam(){
+  if(videoStream){videoStream.getTracks().forEach(t=>t.stop()); videoStream=null;}
+}
+
+// Transfer style
+transferBtn.addEventListener('click', async ()=>{
+  if(!currentImageEl){alert('Upload image or use webcam first'); return;}
+  if(!selectedStyleModel){alert('Select a style'); return;}
+  transferBtn.disabled=true;
+  statusEl.textContent="Status: Loading model...";
+  styleTransfer = ml5.styleTransfer(selectedStyleModel, ()=>runTransfer());
+});
+
+function runTransfer(){
+  statusEl.textContent="Status: Processing...";
+  styleTransfer.transfer(currentImageEl,(err,result)=>{
+    if(err){console.error(err); statusEl.textContent="Status: Error"; transferBtn.disabled=false; return;}
+    outputPreview.innerHTML='';
+    const outImg=document.createElement('img');
+    outImg.src=result.src; outImg.style.width='100%';
+    outputPreview.appendChild(outImg);
+    statusEl.textContent="Status: Done!";
     transferBtn.disabled=false;
-  }
-
-  // Input file upload
-  const inputUpload = document.getElementById("input-upload");
-  const inputPreview = document.getElementById("input-preview");
-  inputUpload.addEventListener("change", e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    img.onload=()=>URL.revokeObjectURL(img.src);
-    inputPreview.innerHTML="";
-    inputPreview.appendChild(img);
-    inputImgElement=img;
   });
-
-  // Webcam capture
-  function useWebcam(){
-    const video = document.createElement("video");
-    video.autoplay=true;
-    video.muted=true;
-    video.playsInline=true;
-    navigator.mediaDevices.getUserMedia({video:true,audio:false}).then(stream=>{
-      video.srcObject=stream;
-      inputPreview.innerHTML="";
-      inputPreview.appendChild(video);
-      inputImgElement=video;
-    }).catch(err=>{
-      alert("Webcam not available or HTTPS required");
-    });
-  }
-
-  // Style transfer
-  async function transferStyle(){
-    if(!selectedStyleModel || !inputImgElement) return;
-    transferBtn.disabled=true;
-    document.getElementById("style-status").textContent="Processing...";
-    styleTransfer = ml5.styleTransfer(selectedStyleModel, () => {
-      styleTransfer.transfer(inputImgElement, (err,result)=>{
-        if(err){
-          console.error(err);
-          document.getElementById("style-status").textContent="Error";
-        } else {
-          const out = document.createElement("img");
-          out.src=result.src;
-          const outContainer=document.getElementById("output-preview");
-          outContainer.innerHTML="";
-          outContainer.appendChild(out);
-          document.getElementById("style-status").textContent="Done!";
-          transferBtn.disabled=false;
-        }
-      });
-    });
-  }
-
+}
 </script>
 </body>
 </html>
