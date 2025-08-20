@@ -201,7 +201,7 @@ function stopWebcam(){
 async function loadModel(){
   statusEl.textContent='Status: Loading model...';
   try{
-    styleTransferModel = await ml5.styleTransfer('/home/models/style-model/', ()=>{
+    styleTransferModel = await ml5.styleTransfer('/home/models/', ()=>{
       statusEl.textContent='Status: Model loaded ✅';
     });
   }catch(e){
