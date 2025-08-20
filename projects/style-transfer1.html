@@ -5,196 +5,202 @@
 <title>Style Transfer | My Portfolio</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- CVless theme CSS -->
+<!-- CVless Dark Theme -->
 <link rel="stylesheet" href="/home/assets/css/main.css">
 
 <style>
-:root{
-  --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent:#4cc9f0; --muted:#bfc9d9;
+:root {
+  --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent: #4cc9f0; --muted:#bfc9d9;
 }
-html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:'Inter',sans-serif;}
-#particles-js{position:fixed;inset:0;z-index:-1;}
-.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:48px 20px;box-sizing:border-box;flex-direction:column;}
-.card{width:100%;max-width:1200px;background:var(--card);border-radius:16px;padding:28px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:grid;gap:18px;grid-template-columns:1fr 1fr;align-items:start;}
-.left,.right{display:flex;flex-direction:column;gap:12px;}
-.preview{width:100%;height:360px;border-radius:12px;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow: inset 0 0 40px rgba(0,0,0,0.6);}
-.preview img, .preview video{width:100%;height:100%;object-fit:cover;}
-.controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
-.btn{background:linear-gradient(135deg,var(--accent),#4895ef);color:#0b1020;padding:10px 14px;border-radius:10px;font-weight:700;border:none;cursor:pointer;}
-.btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.06);}
-.btn.warn{background:#ef476f;color:#fff;}
-h1{margin:0 0 6px;color:var(--accent);font-size:1.6rem;}
-p.lead{margin:0 0 12px;color:var(--muted);}
-.results{background:rgba(0,0,0,0.12);padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:6px;}
-.result-item{display:flex;justify-content:space-between;gap:12px;padding:6px 4px;align-items:center;border-bottom:1px dashed rgba(255,255,255,0.04);}
-.result-item:last-child{border-bottom:none;}
-.confidence{font-weight:700;color:#dff7ff;}
-.status{margin-top:10px;color:var(--muted);font-size:0.95rem;}
-.small{font-size:0.9rem;color:var(--muted);}
-.image-grid{display:flex;flex-wrap:wrap;gap:10px;}
-.image-grid img{width:80px;height:80px;object-fit:cover;border-radius:6px;cursor:pointer;transition:0.2s;}.image-grid img:hover{transform:scale(1.05);}
-@media(max-width:980px){.card{grid-template-columns:1fr;}}
+html,body{height:100%; margin:0; background:var(--bg); color:#fff; font-family:"Inter","Helvetica Neue",Arial,sans-serif;}
+#particles-js{ position:fixed; inset:0; z-index:-1; }
+.wrap{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:48px 20px; gap:18px; flex-wrap:wrap; }
+.card{ width:100%; max-width:420px; background:var(--card); border-radius:16px; padding:28px; box-shadow:0 12px 40px rgba(0,0,0,0.6); display:flex; flex-direction:column; align-items:center; gap:18px; }
+.preview{ width:100%; height:360px; border-radius:12px; background:#111; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.6); }
+.preview img, .preview video{ width:100%; height:100%; object-fit:cover; display:block; }
+.controls{ width:100%; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.btn{ background:linear-gradient(135deg,var(--accent),#4895ef); color:#0b1020; padding:10px 14px; border-radius:10px; font-weight:700; border:none; cursor:pointer; transition: transform 0.2s ease; }
+.btn.ghost{ background:transparent; color:var(--accent); border:1px solid rgba(255,255,255,0.06); }
+.results{ background:rgba(0,0,0,0.12); padding:12px; border-radius:10px; width:100%; text-align:center; }
+.result-item{ display:flex; justify-content:space-between; padding:6px; border-bottom:1px dashed rgba(255,255,255,0.04); }
+.result-item:last-child{ border-bottom:none; }
+.status{ font-size:0.9rem; color:var(--muted); }
+img.thumbnail{ width:80px; height:80px; object-fit:cover; cursor:pointer; border-radius:8px; border:2px solid transparent; transition:0.2s; }
+img.thumbnail.selected{ border-color:var(--accent); }
 </style>
-
-<!-- Particles.js -->
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-
-<!-- p5.js + ml5.js v0.11.1 -->
-<script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ml5@0.11.1/dist/ml5.min.js"></script>
 </head>
-
 <body>
 <div id="particles-js"></div>
 
 <div class="wrap">
-  <div class="card">
-    <div class="left">
-      <h1>Input Image / Webcam</h1>
-      <div class="preview" id="preview">
-        <div class="small" id="placeholder">No image uploaded</div>
-      </div>
-      <div class="controls">
-        <input type="file" id="upload" accept="image/*" style="display:none">
-        <button class="btn ghost" id="uploadBtn">Upload Image</button>
-        <button class="btn ghost" id="webcamBtn">Use Webcam</button>
-        <button class="btn ghost" id="captureBtn" disabled>Capture</button>
-        <button class="btn" id="clearBtn">Clear</button>
-      </div>
-      <div class="status small" id="status">Status: Idle</div>
-    </div>
 
-    <div class="right">
-      <h1>Style Transfer</h1>
-      <div class="image-grid" id="styleGrid">
-        <!-- Style images will be populated here -->
-      </div>
-      <button class="btn" id="transferBtn" disabled>Transfer Style</button>
-      <div class="results" id="outputPreview">
-        <div class="small">Result will appear here</div>
-      </div>
+  <!-- Input Section -->
+  <div class="card" id="input-card">
+    <h3>Input Image</h3>
+    <div class="preview" id="input-preview">
+      <span class="status">No image selected</span>
+    </div>
+    <div class="controls">
+      <input type="file" id="upload-input" accept="image/*" style="display:none"/>
+      <button class="btn ghost" id="upload-btn">Upload Image</button>
+      <button class="btn ghost" id="webcam-btn">Use Webcam</button>
+      <button class="btn" id="clear-btn">Clear</button>
+    </div>
+    <div id="input-thumbnails" class="controls"></div>
+  </div>
+
+  <!-- Style Section -->
+  <div class="card" id="style-card">
+    <h3>Style</h3>
+    <div class="preview" id="style-preview">
+      <span class="status">No style selected</span>
+    </div>
+    <div id="style-thumbnails" class="controls"></div>
+    <button class="btn" id="transfer-btn">Transfer Style</button>
+  </div>
+
+  <!-- Output Section -->
+  <div class="card" id="output-card">
+    <h3>Output</h3>
+    <div class="preview" id="output-preview">
+      <span class="status">Result will appear here</span>
     </div>
   </div>
+
 </div>
 
-<script>
-// Initialize particles
-particlesJS("particles-js",{particles:{number:{value:70},size:{value:3},move:{speed:1},line_linked:{enable:true,distance:150,color:"#4cc9f0"},color:{value:"#4cc9f0"}},interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}});
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.6.0/lib/p5.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.11.1/dist/ml5.min.js" defer></script>
 
-// DOM elements
-const preview = document.getElementById('preview');
-const placeholder = document.getElementById('placeholder');
-const upload = document.getElementById('upload');
-const uploadBtn = document.getElementById('uploadBtn');
-const webcamBtn = document.getElementById('webcamBtn');
-const captureBtn = document.getElementById('captureBtn');
-const clearBtn = document.getElementById('clearBtn');
-const transferBtn = document.getElementById('transferBtn');
-const styleGrid = document.getElementById('styleGrid');
-const outputPreview = document.getElementById('outputPreview');
-const statusEl = document.getElementById('status');
+<script defer>
+window.addEventListener('load', async () => {
 
-let currentImageEl = null;
-let videoStream = null;
-let styleTransfer = null;
-let selectedStyleModel = "";
-
-// Populate styles from /home/images/styles
-const styleNames = ['starry-night','mosaic','scream','udnie']; // adjust with your actual style folders
-styleNames.forEach(name=>{
-  const img = document.createElement('img');
-  img.src = `/home/images/${name}.jpg`;
-  img.title = name;
-  img.addEventListener('click', ()=>selectStyle(name,img));
-  styleGrid.appendChild(img);
-});
-
-function selectStyle(name,imgEl){
-  selectedStyleModel = `/home/models/${name}/`;
-  Array.from(styleGrid.children).forEach(i=>i.style.border="");
-  imgEl.style.border="2px solid var(--accent)";
-  transferBtn.disabled = false;
-}
-
-// Upload image
-uploadBtn.addEventListener('click', ()=>upload.click());
-upload.addEventListener('change', e=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  stopWebcam();
-  const img = document.createElement('img');
-  img.src = URL.createObjectURL(f);
-  img.onload = ()=>URL.revokeObjectURL(img.src);
-  showPreview(img);
-});
-
-// Webcam
-webcamBtn.addEventListener('click', async ()=>{
-  if(videoStream){stopWebcam();return;}
-  try{
-    videoStream = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-    const video = document.createElement('video');
-    video.autoplay = true; video.muted=true; video.playsInline=true;
-    video.srcObject = videoStream;
-    await video.play();
-    showPreview(video);
-    captureBtn.disabled = false;
-  } catch(err){console.error(err); alert('Could not access webcam.');}
-});
-
-captureBtn.addEventListener('click', ()=>{
-  if(!currentImageEl || currentImageEl.tagName!=='VIDEO') return;
-  const video=currentImageEl;
-  const canvas=document.createElement('canvas');
-  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
-  const img=document.createElement('img');
-  img.src=canvas.toDataURL('image/jpeg');
-  showPreview(img);
-  stopWebcam();
-});
-
-clearBtn.addEventListener('click', ()=>{
-  stopWebcam();
-  preview.innerHTML='<div class="small" id="placeholder">No image uploaded</div>';
-  currentImageEl=null;
-  outputPreview.innerHTML='<div class="small">Result will appear here</div>';
-  transferBtn.disabled = true;
-  selectedStyleModel="";
-  Array.from(styleGrid.children).forEach(i=>i.style.border="");
-});
-
-function showPreview(el){
-  preview.innerHTML=''; preview.appendChild(el);
-  currentImageEl = el;
-}
-
-// Stop webcam
-function stopWebcam(){
-  if(videoStream){videoStream.getTracks().forEach(t=>t.stop()); videoStream=null;}
-}
-
-// Transfer style
-transferBtn.addEventListener('click', async ()=>{
-  if(!currentImageEl){alert('Upload image or use webcam first'); return;}
-  if(!selectedStyleModel){alert('Select a style'); return;}
-  transferBtn.disabled=true;
-  statusEl.textContent="Status: Loading model...";
-  styleTransfer = ml5.styleTransfer(selectedStyleModel, ()=>runTransfer());
-});
-
-function runTransfer(){
-  statusEl.textContent="Status: Processing...";
-  styleTransfer.transfer(currentImageEl,(err,result)=>{
-    if(err){console.error(err); statusEl.textContent="Status: Error"; transferBtn.disabled=false; return;}
-    outputPreview.innerHTML='';
-    const outImg=document.createElement('img');
-    outImg.src=result.src; outImg.style.width='100%';
-    outputPreview.appendChild(outImg);
-    statusEl.textContent="Status: Done!";
-    transferBtn.disabled=false;
+  // Particles.js
+  particlesJS("particles-js", {
+    particles: { number:{value:70}, size:{value:3}, move:{speed:1}, line_linked:{enable:true,distance:140,color:"#4cc9f0"}, color:{value:"#4cc9f0"} },
+    interactivity:{events:{onhover:{enable:true,mode:"repulse"}}}
   });
-}
+
+  const inputPreview = document.getElementById('input-preview');
+  const stylePreview = document.getElementById('style-preview');
+  const outputPreview = document.getElementById('output-preview');
+  const uploadInput = document.getElementById('upload-input');
+  const uploadBtn = document.getElementById('upload-btn');
+  const webcamBtn = document.getElementById('webcam-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const transferBtn = document.getElementById('transfer-btn');
+
+  let inputImg = null;
+  let styleImg = null;
+  let styleTransferModel = null;
+  let videoStream = null;
+
+  // Load ml5 style transfer model
+  try {
+    styleTransferModel = await ml5.styleTransfer('/home/models/style-model/', () => {
+      console.log('Model loaded');
+    });
+  } catch(e){
+    alert('Failed to load model from /home/models/');
+    console.error(e);
+  }
+
+  // Upload input image
+  uploadBtn.addEventListener('click', ()=>uploadInput.click());
+  uploadInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(file){
+      stopWebcam();
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.onload = ()=>URL.revokeObjectURL(img.src);
+      img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+      inputPreview.innerHTML=''; inputPreview.appendChild(img);
+      inputImg = img;
+    }
+  });
+
+  // Webcam
+  webcamBtn.addEventListener('click', async ()=>{
+    if(videoStream){
+      stopWebcam(); return;
+    }
+    try{
+      videoStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+      const video = document.createElement('video');
+      video.autoplay=true; video.muted=true; video.playsInline=true;
+      video.srcObject=videoStream;
+      inputPreview.innerHTML=''; inputPreview.appendChild(video);
+      inputImg = video;
+    } catch(e){console.error(e); alert('Could not access webcam. HTTPS required.');}
+  });
+
+  function stopWebcam(){
+    if(videoStream){
+      videoStream.getTracks().forEach(t=>t.stop());
+      videoStream=null;
+    }
+  }
+
+  // Clear
+  clearBtn.addEventListener('click', ()=>{
+    stopWebcam();
+    inputPreview.innerHTML='<span class="status">No image selected</span>';
+    stylePreview.innerHTML='<span class="status">No style selected</span>';
+    outputPreview.innerHTML='<span class="status">Result will appear here</span>';
+    inputImg = styleImg = null;
+  });
+
+  // Load all thumbnails dynamically
+  async function loadThumbnails(folderId, containerId){
+    const container = document.getElementById(containerId);
+    try{
+      const response = await fetch(`/home/images/${folderId}/`);
+      const files = await response.json(); // must return JSON array of filenames
+      files.forEach(f=>{
+        const img = document.createElement('img');
+        img.src=`/home/images/${folderId}/${f}`;
+        img.className='thumbnail';
+        img.addEventListener('click', ()=>{
+          document.querySelectorAll(`#${containerId} img`).forEach(i=>i.classList.remove('selected'));
+          img.classList.add('selected');
+          if(containerId==='input-thumbnails'){ 
+            stopWebcam(); 
+            inputPreview.innerHTML=''; inputPreview.appendChild(img.cloneNode());
+            inputImg = img;
+          } else { 
+            stylePreview.innerHTML=''; stylePreview.appendChild(img.cloneNode());
+            styleImg = img;
+          }
+        });
+        container.appendChild(img);
+      });
+    } catch(e){
+      console.warn(`Failed to load thumbnails from /home/images/${folderId}/`, e);
+    }
+  }
+
+  await loadThumbnails('input', 'input-thumbnails');
+  await loadThumbnails('style', 'style-thumbnails');
+
+  // Transfer style
+  transferBtn.addEventListener('click', async ()=>{
+    if(!inputImg || !styleImg || !styleTransferModel) return alert('Select input and style images first');
+    outputPreview.innerHTML='<span class="status">Processing...</span>';
+    try{
+      const result = await styleTransferModel.transfer(inputImg);
+      const imgEl = document.createElement('img');
+      imgEl.src = result.src;
+      imgEl.style.width='100%'; imgEl.style.height='100%'; imgEl.style.objectFit='cover';
+      outputPreview.innerHTML=''; outputPreview.appendChild(imgEl);
+    } catch(e){
+      console.error(e); alert('Error applying style');
+    }
+  });
+
+});
 </script>
 </body>
 </html>
