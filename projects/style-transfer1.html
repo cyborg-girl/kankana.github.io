@@ -2,229 +2,224 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Style Transfer - CVless Theme</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <script src="/home/libraries/p5.min.js"></script>
-  <script src="/home/libraries/p5.dom.min.js"></script>
-  <script src="/home/libraries/ml5.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <title>Style Transfer Demo</title>
+
+  <!-- p5.js + ml5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/addons/p5.dom.min.js"></script>
+  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+
+  <!-- particles.js -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 
   <style>
     body {
       margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: #0d1117;
-      color: #e6edf3;
-      overflow-x: hidden;
-    }
-    h1, h3 {
-      text-align: center;
-      color: #58a6ff;
-    }
-    .body-container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 20px;
-      margin-top: 100px;
-      padding: 20px;
-      z-index: 1;
-      position: relative;
-    }
-    .white-box {
-      background: #161b22;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .white-box:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-    }
-    .col-3 {
-      flex: 1;
-      max-width: 30%;
-    }
-    .center-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 15px 0;
-    }
-    .image {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .image:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 10px #58a6ff;
-    }
-    .style-container {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 10px 0;
-      flex-wrap: wrap;
-    }
-    .start-btn {
-      display: inline-block;
-      background: #238636;
-      color: white;
-      padding: 12px 20px;
-      margin-top: 15px;
-      border-radius: 8px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .start-btn:hover {
-      background: #2ea043;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #eee;
     }
     #particles-js {
       position: fixed;
-      top: 0; left: 0;
       width: 100%;
       height: 100%;
-      background: #0d1117;
-      z-index: 0;
+      z-index: -1;
     }
-    .credits {
-      text-align: center;
+    .container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
       padding: 20px;
-      font-size: 12px;
-      color: #8b949e;
-      position: relative;
-      z-index: 1;
     }
-    .credits a {
-      color: #58a6ff;
-      text-decoration: none;
+    .section {
+      flex: 1;
+      margin: 10px;
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-    .credits a:hover {
-      text-decoration: underline;
+    h2 {
+      text-align: center;
+      margin-top: 0;
     }
-    #input-img, #style-img {
-      max-width: 250px;
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+    }
+    .thumb-grid img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .thumb-grid img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 8px #4cafef;
+    }
+    .preview {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .preview img {
+      max-width: 100%;
+      max-height: 250px;
       border-radius: 8px;
+    }
+    button {
+      display: block;
+      margin: 15px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #4cafef;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2196f3;
+    }
+    .output {
+      text-align: center;
+    }
+    .output img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
 
-  <h1 class="animate__animated animate__fadeInDown">Style Transfer | My Portfolio</h1>
-
-  <div class="body-container animate__animated animate__fadeInUp">
-    <!-- Input Section -->
-    <div class="white-box col-3">
-      <h3>INPUT</h3>
-      <div class="center-container">
-        <img id="input-img" src="" alt="No input selected" style="display:none;"/>
-      </div>
-      <input id="uploader" type="file" accept="image/*">
-      <button class="start-btn" onclick="useWebcam()">Use Webcam</button>
+  <div class="container">
+    <!-- INPUT SECTION -->
+    <div class="section">
+      <h2>INPUT</h2>
+      <div class="preview"><img id="input-img" style="display:none"/></div>
+      <input type="file" id="uploader" accept="image/*">
+      <div class="thumb-grid" id="input-thumbs"></div>
     </div>
 
-    <!-- Style Section -->
-    <div class="white-box col-3">
-      <h3>STYLE</h3>
-      <div class="center-container">
-        <img id="style-img" src="" alt="No style selected" style="display:none;"/>
-      </div>
-      <div class="style-container">
-        <img class="image" src='/home/images/wave.jpg' onclick="updateStyleImg(this)">
-        <img class="image" src='/home/images/la_muse.jpg' onclick="updateStyleImg(this)">
-        <img class="image" src='/home/images/rain_princess.jpg' onclick="updateStyleImg(this)">
-      </div>
-      <button class="start-btn" onclick="onPredictClick()">Transfer Style</button>
+    <!-- STYLE SECTION -->
+    <div class="section">
+      <h2>STYLE</h2>
+      <div class="preview"><img id="style-img" style="display:none"/></div>
+      <div class="thumb-grid" id="style-thumbs"></div>
+      <button onclick="onPredictClick()">Transfer Style</button>
     </div>
 
-    <!-- Output Section -->
-    <div class="white-box col-3">
-      <h3>OUTPUT</h3>
-      <div id="output-img-container" class="center-container"></div>
+    <!-- OUTPUT SECTION -->
+    <div class="section output">
+      <h2>OUTPUT</h2>
+      <div id="output-img-container"></div>
     </div>
   </div>
-
-  <div class="credits">
-    Built by <a href="https://1023.io">Kankana Shukla</a> with ML5.js & p5.js.  
-    Inspired by <a href="https://github.com/reiinakano">reiinakano</a>.
-  </div>
-
-  <script src="/home/models/sketch.js"></script>
 
   <script>
-    // Particles.js config
-    particlesJS("particles-js", {
-      "particles": {
-        "number": { "value": 80 },
-        "color": { "value": "#58a6ff" },
-        "shape": { "type": "circle" },
-        "opacity": { "value": 0.5 },
-        "size": { "value": 3 },
-        "line_linked": {
-          "enable": true,
-          "distance": 150,
-          "color": "#58a6ff",
-          "opacity": 0.4,
-          "width": 1
-        },
-        "move": {
-          "enable": true,
-          "speed": 3,
-          "direction": "none",
-          "out_mode": "out"
-        }
-      },
-      "interactivity": {
-        "events": {
-          "onhover": { "enable": true, "mode": "grab" },
-          "onclick": { "enable": true, "mode": "push" }
-        },
-        "modes": {
-          "grab": { "distance": 200, "line_linked": { "opacity": 0.7 } }
-        }
-      },
-      "retina_detect": true
+    // Example file arrays (replace with real server-side listing if possible)
+    const inputImages = [
+      "/home/images/girlwithpearl.jpg",
+      "/home/images/starrynight.jpg",
+      "/home/images/sunflower.jpg",
+      "/home/images/monalisa.jpg"
+    ];
+    const styleImages = [
+      "/home/images/wave.jpg",
+      "/home/images/la_muse.jpg",
+      "/home/images/rain_princess.jpg",
+      "/home/images/udnie.jpg",
+      "/home/images/wreck.jpg",
+      "/home/images/scream.jpg"
+    ];
+
+    // Populate thumbnails
+    function populateThumbnails(list, containerId, imgClick) {
+      const container = document.getElementById(containerId);
+      list.forEach(src => {
+        const img = document.createElement("img");
+        img.src = src;
+        img.onclick = () => imgClick(src);
+        container.appendChild(img);
+      });
+    }
+
+    populateThumbnails(inputImages, "input-thumbs", (src) => {
+      const inputImg = document.getElementById("input-img");
+      inputImg.src = src;
+      inputImg.style.display = "block";
     });
 
-    // Preview uploaded input image
-    document.getElementById("uploader").addEventListener("change", function(e) {
+    populateThumbnails(styleImages, "style-thumbs", (src) => {
+      const styleImg = document.getElementById("style-img");
+      styleImg.src = src;
+      styleImg.style.display = "block";
+    });
+
+    // Preview uploaded image
+    document.getElementById("uploader").addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = function(evt) {
-          const imgEl = document.getElementById("input-img");
-          imgEl.src = evt.target.result;
-          imgEl.style.display = "block";
+        reader.onload = ev => {
+          const inputImg = document.getElementById("input-img");
+          inputImg.src = ev.target.result;
+          inputImg.style.display = "block";
         };
         reader.readAsDataURL(file);
       }
     });
 
-    function updateInputImg(el) {
-      const imgEl = document.getElementById("input-img");
-      imgEl.src = el.src;
-      imgEl.style.display = "block";
-    }
+    let styleTransfer;
 
-    function updateStyleImg(el) {
-      const imgEl = document.getElementById("style-img");
-      imgEl.src = el.src;
-      imgEl.style.display = "block";
-    }
-
-    function useWebcam() {
-      alert("Webcam integration coming in sketch.js");
-    }
     function onPredictClick() {
-      alert("Triggering style transfer (sketch.js handles this)");
+      const inputImg = document.getElementById("input-img");
+      const styleImg = document.getElementById("style-img");
+      const outputContainer = document.getElementById("output-img-container");
+
+      if (!inputImg.src || inputImg.style.display === "none") {
+        alert("Please select or upload an input image first.");
+        return;
+      }
+      if (!styleImg.src || styleImg.style.display === "none") {
+        alert("Please select a style image first.");
+        return;
+      }
+
+      outputContainer.innerHTML = "Processing...";
+
+      // assume model path is same as style image but without .jpg
+      const modelPath = styleImg.src.replace(".jpg", "");
+      styleTransfer = ml5.styleTransfer(modelPath, () => {
+        styleTransfer.transfer(inputImg, (err, result) => {
+          if (err) {
+            console.error(err);
+            outputContainer.innerHTML = "Error applying style.";
+            return;
+          }
+          outputContainer.innerHTML = "";
+          const outImg = document.createElement("img");
+          outImg.src = result.src;
+          outputContainer.appendChild(outImg);
+        });
+      });
     }
+
+    // particles.js config
+    particlesJS("particles-js", {
+      "particles": {
+        "number": { "value": 80 },
+        "size": { "value": 3 },
+        "move": { "speed": 2 },
+        "line_linked": { "enable": true, "opacity": 0.2 }
+      }
+    });
   </script>
 </body>
 </html>
