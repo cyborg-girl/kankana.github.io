@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Generative Art Agent — Client‑Only</title>
+  <meta name="description" content="A fully client-side generative art agent that ‘draws’ based on your text prompt. Ready to deploy on GitHub Pages.">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#0f1720; --text:#e6f0ff; --muted:#9fb3c8; --accent:#6ee7ff; --accent2:#c084fc; --ring:#334155;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,Arial; color:var(--text); background:radial-gradient(1200px 800px at 70% -10%, #132031 0%, #0b0f14 60%);
+      display:flex; flex-direction:column; gap:12px;
+    }
+    header{padding:16px 18px 0;}
+    header h1{margin:0; font-size: clamp(18px, 3vw, 24px); letter-spacing:.2px; font-weight:700}
+    header p{margin:6px 0 0; color:var(--muted); font-size:14px}
+
+    .app{
+      display:grid; grid-template-columns: 1fr 320px; gap:14px; padding:12px 14px 18px; width:100%; height:calc(100% - 82px);
+    }
+    @media(max-width:960px){ .app{ grid-template-columns: 1fr; grid-template-rows: auto 1fr; } }
+
+    .canvas-wrap{ position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--ring); box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    #ui{
+      background:linear-gradient(180deg, rgba(15,23,32,.9), rgba(15,23,32,.75));
+      border:1px solid var(--ring); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:12px;
+      backdrop-filter:saturate(1.2) blur(6px);
+    }
+    .card{background:rgba(11,15,20,.5); border:1px solid var(--ring); border-radius:14px; padding:12px}
+    label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
+    input[type="text"], select{
+      width:100%; background:#0c141d; border:1px solid var(--ring); color:var(--text); padding:10px 12px; border-radius:10px; outline:none;
+    }
+    input[type="range"]{width:100%}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    .btnrow{display:flex; gap:8px; flex-wrap:wrap}
+    button{
+      appearance:none; border:none; background:linear-gradient(180deg, #152130, #0e1621);
+      color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer; border:1px solid var(--ring);
+      font-weight:600; letter-spacing:.2px; transition:.15s transform ease, .2s background ease;
+    }
+    button:hover{ transform:translateY(-1px)}
+    button.primary{ background: linear-gradient(180deg, rgba(110,231,255,.25), rgba(192,132,252,.25)); border-color:#263241 }
+    .small{ font-size:12px; color:var(--muted)}
+    .token{display:inline-flex; align-items:center; gap:6px; padding:6px 8px; border:1px dashed #2b3d54; border-radius:999px; color:#cbd5e1; font-size:11px}
+    .pill{display:inline-flex; gap:6px; flex-wrap:wrap}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:11px; background:#0d1420; padding:3px 6px; border-radius:6px; border:1px solid #233146}
+    .footer{color:var(--muted); font-size:12px; padding:0 14px 14px}
+    .link{color:#a5e1ff; text-decoration:none; border-bottom:1px dashed #2b5b80}
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🎨 Generative Art Agent (Client‑Only)</h1>
+    <p>Type a prompt, pick a style, and the agent will “draw” an evolving artwork. No server. Ready for GitHub Pages.</p>
+  </header>
+
+  <main class="app">
+    <section class="canvas-wrap">
+      <!-- p5 will inject the canvas here -->
+      <div id="canvas-target"></div>
+    </section>
+
+    <aside id="ui">
+      <div class="card">
+        <label for="prompt">Prompt</label>
+        <input id="prompt" type="text" placeholder="e.g., neon cyberpunk city at night with flowing lights" />
+        <div class="small" id="prompt-hint">Tip: include mood or colors ("warm", "cool", "neon", "pastel") and shapes ("circles", "triangles", "waves").</div>
+      </div>
+
+      <div class="row">
+        <div class="card">
+          <label for="style">Style</label>
+          <select id="style">
+            <option value="flowfield" selected>Flow Field (particles)</option>
+            <option value="orbits">Orbits (gravitational)</option>
+            <option value="lattice">Lattice (noise warp)</option>
+          </select>
+        </div>
+        <div class="card">
+          <label for="seed">Seed <span class="small" id="seedVal"></span></label>
+          <input id="seed" type="range" min="1" max="9999" value="1234" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="card">
+          <label for="density">Density</label>
+          <input id="density" type="range" min="100" max="6000" step="50" value="2200" />
+        </div>
+        <div class="card">
+          <label for="speed">Speed</label>
+          <input id="speed" type="range" min="0.2" max="6" step="0.1" value="1.2" />
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button class="primary" id="btn-generate">Generate</button>
+        <button id="btn-toggle">Pause</button>
+        <button id="btn-clear">Clear</button>
+        <button id="btn-save">Save PNG</button>
+        <button id="btn-share">Share Link</button>
+      </div>
+
+      <div class="card">
+        <div class="small">Quick keywords:</div>
+        <div class="pill" id="chips"></div>
+      </div>
+
+      <div class="card small">
+        <div><b>Shortcuts</b>: <span class="kbd">G</span> Generate · <span class="kbd">Space</span> Pause/Play · <span class="kbd">S</span> Save · <span class="kbd">C</span> Clear</div>
+      </div>
+
+      <div class="card small" id="meta"></div>
+    </aside>
+  </main>
+
+  <div class="footer">Built for static hosting. Drop this file into a GitHub Pages repo and it just works. Source is a single HTML file.</div>
+
+<script>
+/**** Util: seeded RNG ****/
+function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296}}
+function hashStringToSeed(str){let h=2166136261>>>0; for(let i=0;i<str.length;i++){h^=str.charCodeAt(i); h=Math.imul(h,16777619)} return h>>>0}
+function pick(rand, arr){return arr[Math.floor(rand()*arr.length)]}
+
+/**** Palettes ****/
+const PALETTES={
+  warm:["#ff7a59","#ffb347","#ffd166","#ff5e5b","#fca311"],
+  cool:["#90e0ef","#48cae4","#00b4d8","#4895ef","#560bad"],
+  neon:["#00f5d4","#7b2cbf","#f72585","#4cc9f0","#b5179e"],
+  pastel:["#ffd6e0","#cdeac0","#c9e4de","#f1f7ed","#c6def1"],
+  forest:["#184e77","#1e6091","#76c893","#34a0a4","#99d98c"],
+  sunset:["#ff9e00","#fb5607","#ff006e","#8338ec","#3a86ff"],
+  mono:["#e2e8f0","#94a3b8","#64748b","#475569","#1f2937"]
+};
+
+/**** Prompt → intent parsing ****/
+const KEYWORDS=[
+  "warm","cool","neon","pastel","forest","sunset","mono",
+  "circles","triangles","squares","lines","waves","flow","grid","spiral","orbits","galaxy"
+];
+const chips=["neon","pastel","warm","cool","forest","sunset","circles","triangles","waves","orbits","grid","spiral"];
+
+/**** Agent state ****/
+const Agent={
+  running:true, w:0, h:0, particles:[],
+  cfg:{ style:"flowfield", density:2200, speed:1.2, seed:1234, palette:PALETTES.neon, brush:"circles" },
+  rand:mulberry32(1234),
+  flowField:[], cell:22, cols:0, rows:0, zoff:0,
+};
+
+/**** p5 sketch ****/
+let sketch=function(p){
+  p.setup=function(){
+    const target=document.getElementById('canvas-target');
+    Agent.w=target.clientWidth||window.innerWidth-360; Agent.h=Math.max(340, window.innerHeight-140);
+    const cnv=p.createCanvas(Agent.w, Agent.h);
+    cnv.parent(target);
+    p.background('#060a0f');
+    p.pixelDensity(Math.min(2, window.devicePixelRatio||1));
+    initFromURL();
+    bootUI();
+    regenerate();
+  }
+
+  p.windowResized=function(){
+    const target=document.getElementById('canvas-target');
+    Agent.w=target.clientWidth||window.innerWidth-360; Agent.h=Math.max(340, window.innerHeight-140);
+    p.resizeCanvas(Agent.w, Agent.h);
+  }
+
+  p.draw=function(){
+    if(!Agent.running) return;
+    if(Agent.cfg.style==='flowfield'){ drawFlowField(p) }
+    else if(Agent.cfg.style==='orbits'){ drawOrbits(p) }
+    else if(Agent.cfg.style==='lattice'){ drawLattice(p) }
+  }
+}
+
+new p5(sketch);
+
+/**** Core behaviors ****/
+function regenerate(){
+  const prompt=document.getElementById('prompt').value.trim();
+  const style=document.getElementById('style').value;
+  const density=+document.getElementById('density').value;
+  const speed=+document.getElementById('speed').value;
+  const seed=+document.getElementById('seed').value;
+
+  const seedFromPrompt = hashStringToSeed(prompt||'');
+  const mergedSeed = seed ^ seedFromPrompt; // deterministic blend
+  Agent.rand=mulberry32(mergedSeed);
+
+  const intent=parsePrompt(prompt, Agent.rand);
+  Agent.cfg={...Agent.cfg, style, density, speed, seed, palette:intent.palette, brush:intent.brush};
+  document.getElementById('seedVal').textContent=`#${seed}`;
+
+  // clear + init systems
+  const ctx = document.querySelector('canvas').getContext('2d');
+  ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+  fillBackground('#060a0f');
+
+  if(style==='flowfield') initFlowField();
+  if(style==='orbits') initOrbits();
+  if(style==='lattice') initLattice();
+
+  updateMeta(intent);
+}
+
+function fillBackground(c){ const p5Canvas=document.querySelector('canvas'); const ctx=p5Canvas.getContext('2d'); ctx.fillStyle=c; ctx.fillRect(0,0,p5Canvas.width,p5Canvas.height); }
+
+/**** Prompt parsing ****/
+function parsePrompt(prompt, rand){
+  const p=prompt.toLowerCase();
+  // palette
+  let paletteKey = Object.keys(PALETTES).find(k=>p.includes(k));
+  if(!paletteKey){ paletteKey = pick(rand, Object.keys(PALETTES)); }
+  // brush
+  let brush='circles';
+  if(p.includes('triangle')) brush='triangles'; else if(p.includes('square')) brush='squares'; else if(p.includes('line')) brush='lines'; else if(p.includes('wave')||p.includes('flow')) brush='waves'; else if(p.includes('orbit')||p.includes('galaxy')) brush='orbits';
+  // style hint
+  let styleHint=null;
+  if(p.includes('orbit')||p.includes('planet')) styleHint='orbits'; else if(p.includes('grid')||p.includes('lattice')) styleHint='lattice'; else if(p.includes('flow')||p.includes('wind')||p.includes('smoke')||p.includes('waves')) styleHint='flowfield';
+  // density/speed nudges
+  const densityNudge = p.includes('dense')? 1.3 : p.includes('minimal')? 0.6 : 1;
+  const speedNudge = p.includes('fast')? 1.6 : p.includes('slow')? 0.7 : 1;
+  return { palette: PALETTES[paletteKey], brush, styleHint, densityNudge, speedNudge };
+}
+
+/**** Flow Field ****/
+function initFlowField(){
+  Agent.cell = 18 + Math.floor(Agent.rand()*16); // cell size
+  Agent.cols = Math.ceil(Agent.w/Agent.cell);
+  Agent.rows = Math.ceil(Agent.h/Agent.cell);
+  Agent.flowField = new Array(Agent.cols*Agent.rows);
+  Agent.zoff = Agent.rand()*1000;
+  // build vector field
+  for(let y=0;y<Agent.rows;y++){
+    for(let x=0;x<Agent.cols;x++){
+      const index = x + y*Agent.cols;
+      const angle = noise2D(x*.08, y*.08, Agent.zoff)*Math.PI*2; // 0..TAU
+      Agent.flowField[index] = angle;
+    }
+  }
+  // particles
+  Agent.particles = [];
+  const count = Agent.cfg.density;
+  for(let i=0;i<count;i++){
+    Agent.particles.push({
+      x:Agent.rand()*Agent.w, y:Agent.rand()*Agent.h,
+      vx:0, vy:0, hue: pick(Agent.rand, Agent.cfg.palette), life: 50+Math.floor(Agent.rand()*250)
+    })
+  }
+}
+
+function drawFlowField(p){
+  p.strokeWeight(0.6);
+  p.noFill();
+  for(let i=0;i<Agent.particles.length;i++){
+    const pt=Agent.particles[i];
+    const col=pt.hue + (Math.random()<0.03? 'CC':'AA');
+    p.stroke(col);
+    const gx=Math.floor(pt.x/Agent.cell); const gy=Math.floor(pt.y/Agent.cell);
+    const idx=gx+gy*Agent.cols;
+    const angle = Agent.flowField[idx] || 0;
+    const speed = Agent.cfg.speed * 0.8 + Math.random()*0.4;
+    const ax=Math.cos(angle)*speed; const ay=Math.sin(angle)*speed;
+    pt.vx = (pt.vx + ax)*0.95; pt.vy=(pt.vy + ay)*0.95;
+    const nx=pt.x+pt.vx; const ny=pt.y+pt.vy;
+    p.stroke(col);
+    p.line(pt.x, pt.y, nx, ny);
+    pt.x=nx; pt.y=ny; pt.life--;
+    if(nx<0||ny<0||nx>Agent.w||ny>Agent.h||pt.life<=0){
+      pt.x=Agent.rand()*Agent.w; pt.y=Agent.rand()*Agent.h; pt.vx=pt.vy=0; pt.life=50+Math.floor(Agent.rand()*250);
+    }
+  }
+  // evolve field slowly
+  Agent.zoff += 0.002;
+}
+
+/**** Orbits ****/
+let bodies=[]; let orbiters=[];
+function initOrbits(){
+  bodies=[]; orbiters=[];
+  const cx=Agent.w/2, cy=Agent.h/2;
+  const n=3+Math.floor(Agent.rand()*3);
+  for(let i=0;i<n;i++){
+    bodies.push({ x: cx + (Agent.rand()-.5)*200, y: cy + (Agent.rand()-.5)*140, mass: 120 + Agent.rand()*260, hue: pick(Agent.rand, Agent.cfg.palette) });
+  }
+  const count = Agent.cfg.density*0.4;
+  for(let i=0;i<count;i++){
+    orbiters.push({ x:Agent.rand()*Agent.w, y:Agent.rand()*Agent.h, vx:(Agent.rand()-.5)*2, vy:(Agent.rand()-.5)*2, hue: pick(Agent.rand, Agent.cfg.palette) });
+  }
+}
+
+function drawOrbits(p){
+  p.noFill(); p.strokeWeight(0.7);
+  for(const orb of orbiters){
+    let ax=0, ay=0;
+    for(const b of bodies){
+      const dx=b.x-orb.x, dy=b.y-orb.y; const r2=dx*dx+dy*dy+0.001; const f=b.mass/r2; ax+=dx*f*0.02; ay+=dy*f*0.02;
+    }
+    orb.vx=(orb.vx+ax)*0.995; orb.vy=(orb.vy+ay)*0.995;
+    const nx=orb.x+orb.vx, ny=orb.y+orb.vy;
+    p.stroke(orb.hue+"99"); p.line(orb.x,orb.y,nx,ny);
+    orb.x=nx; orb.y=ny;
+    if(nx<0||ny<0||nx>Agent.w||ny>Agent.h){ orb.x=Agent.rand()*Agent.w; orb.y=Agent.rand()*Agent.h; }
+  }
+  // draw bodies subtly
+  for(const b of bodies){ p.noStroke(); p.fill(b.hue+"22"); p.circle(b.x,b.y, Math.sqrt(b.mass)*3); }
+}
+
+/**** Lattice (noise warp) ****/
+let latticePts=[]; let tick=0;
+function initLattice(){
+  latticePts=[]; tick=0;
+  const step = 8 + Math.floor(Agent.rand()*8);
+  for(let y=0;y<Agent.h;y+=step){
+    for(let x=0;x<Agent.w;x+=step){
+      latticePts.push({x,y, hue: pick(Agent.rand, Agent.cfg.palette)});
+    }
+  }
+}
+
+function drawLattice(p){
+  p.noStroke();
+  for(let i=0;i<latticePts.length;i++){
+    const pt=latticePts[i];
+    const n = noise2D(pt.x*0.003, pt.y*0.003, tick*0.005);
+    const r = 0.5 + n*1.8;
+    p.fill(pt.hue+"66");
+    if(Agent.cfg.brush==='triangles'){ p.triangle(pt.x,pt.y, pt.x+r*3,pt.y, pt.x,pt.y+r*3); }
+    else if(Agent.cfg.brush==='squares'){ p.square(pt.x,pt.y, r*3); }
+    else if(Agent.cfg.brush==='lines'){ p.rect(pt.x,pt.y, r*6,1.2); }
+    else { p.circle(pt.x,pt.y,r*3); }
+  }
+  tick++;
+}
+
+/**** Simple 2D noise (value noise) ****/
+function noise2D(x,y,z=0){
+  // Hash → gradient noise (fast, deterministic)
+  function h(n){ const s=Math.sin(n)*43758.5453; return s-Math.floor(s); }
+  function lerp(a,b,t){ return a+(b-a)*t }
+  const xi=Math.floor(x), yi=Math.floor(y), zi=Math.floor(z);
+  const xf=x-xi, yf=y-yi, zf=z-zi;
+  const u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf), w=zf*zf*(3-2*zf);
+  function g(ix,iy,iz){ return h(ix*15731+iy*789221+iz*1376312589) }
+  const x1=lerp(g(xi,yi,zi), g(xi+1,yi,zi), u);
+  const x2=lerp(g(xi,yi+1,zi), g(xi+1,yi+1,zi), u);
+  const y1=lerp(x1,x2,v);
+  const x3=lerp(g(xi,yi,zi+1), g(xi+1,yi,zi+1), u);
+  const x4=lerp(g(xi,yi+1,zi+1), g(xi+1,yi+1,zi+1), u);
+  const y2=lerp(x3,x4,v);
+  return lerp(y1,y2,w); // 0..1
+}
+
+/**** UI ****/
+function bootUI(){
+  // chips
+  const chipsEl=document.getElementById('chips');
+  chips.forEach(k=>{ const b=document.createElement('button'); b.textContent=k; b.onclick=()=>{ document.getElementById('prompt').value = (document.getElementById('prompt').value+" "+k).trim(); }; b.className='token'; chipsEl.appendChild(b); });
+  // inputs
+  document.getElementById('btn-generate').onclick=()=>{ onGenerate() };
+  document.getElementById('btn-toggle').onclick=()=>{ Agent.running=!Agent.running; document.getElementById('btn-toggle').textContent = Agent.running? 'Pause':'Play'; };
+  document.getElementById('btn-clear').onclick=()=>{ clearCanvas(); };
+  document.getElementById('btn-save').onclick=()=>{ savePNG(); };
+  document.getElementById('btn-share').onclick=()=>{ shareLink(); };
+  ['style','seed','density','speed'].forEach(id=>{ document.getElementById(id).addEventListener('change', onGenerate); });
+  document.getElementById('prompt').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ onGenerate(); }});
+  // shortcuts
+  window.addEventListener('keydown',(e)=>{
+    if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if(e.key==='g' || e.key==='G'){ onGenerate(); }
+    if(e.key===' '){ e.preventDefault(); const btn=document.getElementById('btn-toggle'); btn.click(); }
+    if(e.key==='s' || e.key==='S'){ savePNG(); }
+    if(e.key==='c' || e.key==='C'){ clearCanvas(); }
+  });
+}
+
+function clearCanvas(){ const c=document.querySelector('canvas'); const ctx=c.getContext('2d'); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.fillStyle='#060a0f'; ctx.fillRect(0,0,c.width,c.height); }
+
+function savePNG(){ const dt = new Date().toISOString().replace(/[:.]/g,'-'); const name = `genart_${dt}.png`; window.saveCanvas && saveCanvas(name); }
+
+function onGenerate(){
+  // If prompt suggests a style, set it.
+  const p=document.getElementById('prompt').value.toLowerCase();
+  const hint = parsePrompt(p, Agent.rand).styleHint;
+  if(hint){ document.getElementById('style').value = hint; }
+  regenerate();
+}
+
+function shareLink(){
+  const qs = new URLSearchParams({
+    p: document.getElementById('prompt').value,
+    s: document.getElementById('style').value,
+    d: document.getElementById('density').value,
+    v: document.getElementById('speed').value,
+    r: document.getElementById('seed').value
+  }).toString();
+  const url = location.origin+location.pathname+"?"+qs;
+  navigator.clipboard.writeText(url).then(()=>{ toast(`Sharable link copied to clipboard`); })
+}
+
+function initFromURL(){
+  const q=new URLSearchParams(location.search);
+  if(q.has('p')) document.getElementById('prompt').value=q.get('p');
+  if(q.has('s')) document.getElementById('style').value=q.get('s');
+  if(q.has('d')) document.getElementById('density').value=q.get('d');
+  if(q.has('v')) document.getElementById('speed').value=q.get('v');
+  if(q.has('r')) document.getElementById('seed').value=q.get('r');
+}
+
+function updateMeta(intent){
+  const m=document.getElementById('meta');
+  const cols = Object.entries(PALETTES).find(([k,v])=>v===intent.palette)[0];
+  m.innerHTML = `
+    <div><b>Config</b></div>
+    <div>Style: <span class="kbd">${document.getElementById('style').value}</span></div>
+    <div>Brush: <span class="kbd">${Agent.cfg.brush}</span></div>
+    <div>Palette: <span class="kbd">${cols}</span></div>
+    <div>Particles: <span class="kbd">${Agent.cfg.density.toLocaleString()}</span> · Speed: <span class="kbd">${Agent.cfg.speed}</span></div>
+  `;
+}
+
+/**** tiny toast ****/
+let toastEl=null; let toastTimer=null;
+function toast(msg){
+  if(!toastEl){ toastEl=document.createElement('div'); toastEl.style.position='fixed'; toastEl.style.bottom='16px'; toastEl.style.left='50%'; toastEl.style.transform='translateX(-50%)'; toastEl.style.background='rgba(10,14,20,.9)'; toastEl.style.border='1px solid #223146'; toastEl.style.padding='10px 14px'; toastEl.style.borderRadius='12px'; toastEl.style.color='#dbeafe'; toastEl.style.fontSize='13px'; toastEl.style.boxShadow='0 8px 20px rgba(0,0,0,.35)'; document.body.appendChild(toastEl); }
+  toastEl.textContent=msg; toastEl.style.opacity='1';
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ toastEl.style.opacity='0'; }, 1400);
+}
+</script>
+</body>
+</html>
