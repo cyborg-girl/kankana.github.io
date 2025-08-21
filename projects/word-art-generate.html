@@ -5,11 +5,11 @@
 <title>AI Visual Agent - Animated Painterly Demo</title>
 <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
 <style>
-  body { background: #111; color: #eee; font-family: sans-serif; text-align: center; }
-  canvas { margin-top: 10px; border: 2px solid #333; }
-  input, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
-  button { cursor: pointer; background: #444; color: white; }
-  button:hover { background: #666; }
+body { background: #111; color: #eee; font-family: sans-serif; text-align: center; }
+canvas { margin-top: 10px; border: 2px solid #333; }
+input, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
+button { cursor: pointer; background: #444; color: white; }
+button:hover { background: #666; }
 </style>
 </head>
 <body>
@@ -21,93 +21,91 @@
 <script>
 let promptWord = "";
 let animatedObjects = [];
+let baseGraphics;
 
 function setup() {
   createCanvas(600, 400);
-  background("#222");
-}
-
-function fuzzyBrush(x, y, size, col) {
-  noStroke();
-  fill(col[0], col[1], col[2], 100);
-  for (let i = 0; i < 40; i++) {
-    ellipse(x + random(-size/2, size/2), y + random(-size/2, size/2), random(size*0.7, size));
-  }
+  baseGraphics = createGraphics(width, height);
+  baseGraphics.background("#222");
 }
 
 function generateArt() {
   promptWord = document.getElementById("prompt").value.toLowerCase();
-  background("#222");
   animatedObjects = [];
+  baseGraphics.background("#222");
   drawPrompt();
+  loop();
 }
 
+function draw() {
+  background("#222");
+  image(baseGraphics,0,0); // static painterly drawing
+
+  // Animate objects
+  animatedObjects.forEach(obj=>{
+    if(obj.type==='sun'){
+      push(); translate(obj.x,obj.y); rotate(obj.angle);
+      fill(255,204,0); ellipse(0,0,150);
+      for(let a=0;a<TWO_PI;a+=PI/12){ line(0,0,cos(a)*100,sin(a)*100); }
+      pop();
+      obj.angle += 0.01;
+    }
+    else if(obj.type==='balloon'){
+      fill(255,0,200); ellipse(obj.x,obj.y,60);
+      stroke(200); line(obj.x,obj.y+10,obj.x,obj.y+50);
+      obj.y -= 0.5; if(obj.y<-60) obj.y=height+60;
+    }
+    else if(obj.type==='star'){
+      fill(255,255,0, random(100,255)); ellipse(obj.x,obj.y,obj.size);
+    }
+  });
+}
+
+// Painterly brush
+function fuzzyBrush(pg,x, y, size, col) {
+  pg.noStroke();
+  pg.fill(col[0], col[1], col[2], 100);
+  for (let i = 0; i < 40; i++) {
+    pg.ellipse(x + random(-size/2, size/2),
+               y + random(-size/2, size/2),
+               random(size*0.7, size));
+  }
+}
+
+// Drawing functions
 function drawPrompt() {
-  // Categories and variations
+  // Categories (grouped keywords)
   const animals = ["bear","cat","dog","fox","rabbit","turtle","elephant","bird","fish","butterfly"];
   const nature = ["tree","flower","mountain","sun","moon","cloud","river","star","volcano"];
   const objects = ["house","castle","rocket","car","boat","bridge","balloon","gift"];
   const food = ["apple","pizza","cake","ice cream","banana"];
   const fun = ["heart","smiley","rainbow","star","balloon"];
 
-  function randomColor(base) {
-    return base.map(c => constrain(c + random(-30,30), 0,255));
-  }
-
-  function drawAnimal() {
-    fuzzyBrush(width/2, height/2+random(-20,20), 100, randomColor([200,150,100]));
-    fuzzyBrush(width/2, height/2-50, 70, randomColor([200,150,100]));
-  }
-
+  function drawAnimal(){ fuzzyBrush(baseGraphics,width/2, height/2+random(-20,20),100,[200,150,100]); fuzzyBrush(baseGraphics,width/2,height/2-50,70,[200,150,100]); }
   function drawNature(type){
-    if(type==="tree") { fill(101,67,33); rect(width/2-20, height/2, 40, 120); fuzzyBrush(width/2, height/2-60, 150, [34,139,34]); }
-    else if(type==="flower"){ for (let a=0; a<TWO_PI; a+=PI/4) { let x=width/2+cos(a)*60; let y=height/2+sin(a)*60; fuzzyBrush(x,y,50,[255,100,150]); } fill(255,200,0); ellipse(width/2,height/2,50); }
-    else if(type==="mountain"){ fill(100); triangle(100,400,300,100,500,400); fill(120); triangle(300,400,500,150,700,400); fill(255); triangle(260,160,300,100,340,160);}
-    else if(type==="sun"){ fill(255,204,0); ellipse(width/2,height/2,150); animatedObjects.push({type:'sun',x:width/2,y:height/2,angle:0}); }
-    else if(type==="moon"){ fill(220); ellipse(width/2,height/2,120); fill(34); ellipse(width/2+30,height/2-20,50);}
-    else if(type==="cloud"){ fuzzyBrush(width/2,height/2,150,[200,200,200]); }
-    else if(type==="star"){ animatedObjects.push({type:'star',x:random(width),y:random(height),size:random(5,15),twinkle:random(0,255)});}
+    if(type==="tree"){ baseGraphics.fill(101,67,33); baseGraphics.rect(width/2-20, height/2, 40, 120); fuzzyBrush(baseGraphics,width/2,height/2-60,150,[34,139,34]); }
+    else if(type==="flower"){ for (let a=0;a<TWO_PI;a+=PI/4){ let x=width/2+cos(a)*60; let y=height/2+sin(a)*60; fuzzyBrush(baseGraphics,x,y,50,[255,100,150]); } baseGraphics.fill(255,200,0); baseGraphics.ellipse(width/2,height/2,50);}
+    else if(type==="mountain"){ baseGraphics.fill(100); baseGraphics.triangle(100,400,300,100,500,400); baseGraphics.fill(120); baseGraphics.triangle(300,400,500,150,700,400); baseGraphics.fill(255); baseGraphics.triangle(260,160,300,100,340,160);}
+    else if(type==="sun"){ animatedObjects.push({type:'sun',x:width/2,y:height/2,angle:0}); }
+    else if(type==="moon"){ baseGraphics.fill(220); baseGraphics.ellipse(width/2,height/2,120); baseGraphics.fill(34); baseGraphics.ellipse(width/2+30,height/2-20,50);}
+    else if(type==="cloud"){ fuzzyBrush(baseGraphics,width/2,height/2,150,[200,200,200]); }
+    else if(type==="star"){ animatedObjects.push({type:'star',x:random(width),y:random(height),size:random(5,15)});}
   }
-
   function drawObject(type){
     if(type==="balloon"){ animatedObjects.push({type:'balloon',x:width/2,y:height/2-50}); }
-    else if(type==="rocket"){ fill(180); triangle(width/2,height/2-80,width/2-30,height/2+40,width/2+30,height/2+40); fill(255,0,0); triangle(width/2-15,height/2+40,width/2+15,height/2+40,width/2,height/2+80);}
-    else if(type==="house"){ fill(200,100,50); rect(width/2-80,height/2,160,120); fill(150,50,30); triangle(width/2-90,height/2,width/2,height/2-100,width/2+90,height/2);}
+    else if(type==="rocket"){ baseGraphics.fill(180); baseGraphics.triangle(width/2,height/2-80,width/2-30,height/2+40,width/2+30,height/2+40); baseGraphics.fill(255,0,0); baseGraphics.triangle(width/2-15,height/2+40,width/2+15,height/2+40,width/2,height/2+80);}
+    else if(type==="house"){ baseGraphics.fill(200,100,50); baseGraphics.rect(width/2-80,height/2,160,120); baseGraphics.fill(150,50,30); baseGraphics.triangle(width/2-90,height/2,width/2,height/2-100,width/2+90,height/2);}
   }
-
   function drawFood(type){
-    if(type==="apple"){ fill(255,0,0); ellipse(width/2,height/2,80); fill(34,139,34); rect(width/2-5,height/2-50,10,20);}
-    else if(type==="pizza"){ fill(255,200,50); triangle(width/2-60,height/2, width/2+60,height/2, width/2,height/2-100);}
+    if(type==="apple"){ baseGraphics.fill(255,0,0); baseGraphics.ellipse(width/2,height/2,80); baseGraphics.fill(34,139,34); baseGraphics.rect(width/2-5,height/2-50,10,20);}
+    else if(type==="pizza"){ baseGraphics.fill(255,200,50); baseGraphics.triangle(width/2-60,height/2, width/2+60,height/2, width/2,height/2-100);}
   }
 
-  // Determine category
   if(animals.includes(promptWord)) drawAnimal();
   else if(nature.includes(promptWord)) drawNature(promptWord);
   else if(objects.includes(promptWord)) drawObject(promptWord);
   else if(food.includes(promptWord)) drawFood(promptWord);
-  else { // fallback abstract
-    for(let i=0;i<200;i++){ fuzzyBrush(random(width),random(height),random(20,80),[random(255),random(255),random(255)]); }
-  }
-
-  loop(); // start animation
-}
-
-function draw(){
-  background("#222");
-
-  animatedObjects.forEach(obj=>{
-    if(obj.type==='sun'){
-      push(); translate(obj.x,obj.y); rotate(obj.angle); fill(255,204,0); ellipse(0,0,150); for(let a=0;a<TWO_PI;a+=PI/12){ line(0,0,cos(a)*100,sin(a)*100); } pop();
-      obj.angle+=0.01;
-    }
-    else if(obj.type==='star'){
-      fill(255,255,0, random(100,255)); ellipse(obj.x,obj.y,obj.size); 
-    }
-    else if(obj.type==='balloon'){
-      fill(255,0,200); ellipse(obj.x,obj.y,60); stroke(200); line(obj.x,obj.y+10,obj.x,obj.y+50);
-      obj.y-=0.5; if(obj.y<-60) obj.y=height+60; 
-    }
-  });
+  else { for(let i=0;i<200;i++){ fuzzyBrush(baseGraphics,random(width),random(height),random(20,80),[random(255),random(255),random(255)]); } }
 }
 </script>
 </body>
