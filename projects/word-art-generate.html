@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI Visual Agent - Animated Painterly Demo</title>
+<title>AI Visual Agent - Painterly Animals Demo</title>
 <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
 <style>
 body { background: #111; color: #eee; font-family: sans-serif; text-align: center; }
@@ -13,8 +13,8 @@ button:hover { background: #666; }
 </style>
 </head>
 <body>
-<h1>🎨 AI Visual Agent - Animated Painterly Demo</h1>
-<input id="prompt" placeholder="Type a prompt (e.g., bear, sun, fish)">
+<h1>🎨 AI Visual Agent - Painterly Animals Demo</h1>
+<input id="prompt" placeholder="Type a prompt (bear, cat, dog, bird)">
 <button onclick="generateArt()">Draw</button>
 <button onclick="saveCanvas('drawing','png')">Save PNG</button>
 
@@ -39,9 +39,8 @@ function generateArt() {
 
 function draw() {
   background("#222");
-  image(baseGraphics,0,0); // static painterly drawing
+  image(baseGraphics,0,0); // static drawing
 
-  // Animate objects
   animatedObjects.forEach(obj=>{
     if(obj.type==='sun'){
       push(); translate(obj.x,obj.y); rotate(obj.angle);
@@ -62,50 +61,90 @@ function draw() {
 }
 
 // Painterly brush
-function fuzzyBrush(pg,x, y, size, col) {
+function fuzzyBrush(pg,x,y,size,col){
   pg.noStroke();
-  pg.fill(col[0], col[1], col[2], 100);
-  for (let i = 0; i < 40; i++) {
-    pg.ellipse(x + random(-size/2, size/2),
-               y + random(-size/2, size/2),
-               random(size*0.7, size));
+  pg.fill(col[0],col[1],col[2],100);
+  for(let i=0;i<40;i++){
+    pg.ellipse(x+random(-size/2,size/2),y+random(-size/2,size/2),random(size*0.7,size));
   }
 }
 
-// Drawing functions
-function drawPrompt() {
-  // Categories (grouped keywords)
-  const animals = ["bear","cat","dog","fox","rabbit","turtle","elephant","bird","fish","butterfly"];
-  const nature = ["tree","flower","mountain","sun","moon","cloud","river","star","volcano"];
-  const objects = ["house","castle","rocket","car","boat","bridge","balloon","gift"];
-  const food = ["apple","pizza","cake","ice cream","banana"];
-  const fun = ["heart","smiley","rainbow","star","balloon"];
+// Animal drawings with eyes, nose, mouth, ears
+function drawBear(pg){
+  // body
+  fuzzyBrush(pg,width/2,height/2+40,120,[139,69,19]);
+  // head
+  fuzzyBrush(pg,width/2,height/2-40,80,[139,69,19]);
+  // ears
+  fuzzyBrush(pg,width/2-40,height/2-80,40,[139,69,19]);
+  fuzzyBrush(pg,width/2+40,height/2-80,40,[139,69,19]);
+  // eyes
+  pg.fill(0); pg.ellipse(width/2-15,height/2-45,15);
+  pg.ellipse(width/2+15,height/2-45,15);
+  // nose
+  pg.fill(0); pg.ellipse(width/2,height/2-20,20,15);
+  // mouth
+  pg.noFill(); pg.stroke(0); pg.strokeWeight(3);
+  pg.arc(width/2,height/2-10,40,20,0,PI);
+}
 
-  function drawAnimal(){ fuzzyBrush(baseGraphics,width/2, height/2+random(-20,20),100,[200,150,100]); fuzzyBrush(baseGraphics,width/2,height/2-50,70,[200,150,100]); }
-  function drawNature(type){
-    if(type==="tree"){ baseGraphics.fill(101,67,33); baseGraphics.rect(width/2-20, height/2, 40, 120); fuzzyBrush(baseGraphics,width/2,height/2-60,150,[34,139,34]); }
-    else if(type==="flower"){ for (let a=0;a<TWO_PI;a+=PI/4){ let x=width/2+cos(a)*60; let y=height/2+sin(a)*60; fuzzyBrush(baseGraphics,x,y,50,[255,100,150]); } baseGraphics.fill(255,200,0); baseGraphics.ellipse(width/2,height/2,50);}
-    else if(type==="mountain"){ baseGraphics.fill(100); baseGraphics.triangle(100,400,300,100,500,400); baseGraphics.fill(120); baseGraphics.triangle(300,400,500,150,700,400); baseGraphics.fill(255); baseGraphics.triangle(260,160,300,100,340,160);}
-    else if(type==="sun"){ animatedObjects.push({type:'sun',x:width/2,y:height/2,angle:0}); }
-    else if(type==="moon"){ baseGraphics.fill(220); baseGraphics.ellipse(width/2,height/2,120); baseGraphics.fill(34); baseGraphics.ellipse(width/2+30,height/2-20,50);}
-    else if(type==="cloud"){ fuzzyBrush(baseGraphics,width/2,height/2,150,[200,200,200]); }
-    else if(type==="star"){ animatedObjects.push({type:'star',x:random(width),y:random(height),size:random(5,15)});}
-  }
-  function drawObject(type){
-    if(type==="balloon"){ animatedObjects.push({type:'balloon',x:width/2,y:height/2-50}); }
-    else if(type==="rocket"){ baseGraphics.fill(180); baseGraphics.triangle(width/2,height/2-80,width/2-30,height/2+40,width/2+30,height/2+40); baseGraphics.fill(255,0,0); baseGraphics.triangle(width/2-15,height/2+40,width/2+15,height/2+40,width/2,height/2+80);}
-    else if(type==="house"){ baseGraphics.fill(200,100,50); baseGraphics.rect(width/2-80,height/2,160,120); baseGraphics.fill(150,50,30); baseGraphics.triangle(width/2-90,height/2,width/2,height/2-100,width/2+90,height/2);}
-  }
-  function drawFood(type){
-    if(type==="apple"){ baseGraphics.fill(255,0,0); baseGraphics.ellipse(width/2,height/2,80); baseGraphics.fill(34,139,34); baseGraphics.rect(width/2-5,height/2-50,10,20);}
-    else if(type==="pizza"){ baseGraphics.fill(255,200,50); baseGraphics.triangle(width/2-60,height/2, width/2+60,height/2, width/2,height/2-100);}
-  }
+function drawCat(pg){
+  // body
+  fuzzyBrush(pg,width/2,height/2+30,100,[200,150,100]);
+  // head
+  fuzzyBrush(pg,width/2,height/2-40,60,[200,150,100]);
+  // ears
+  pg.triangle(width/2-30,height/2-70,width/2-50,height/2-100,width/2-10,height/2-70);
+  pg.triangle(width/2+30,height/2-70,width/2+50,height/2-100,width/2+10,height/2-70);
+  // eyes
+  pg.fill(0); pg.ellipse(width/2-15,height/2-50,10); pg.ellipse(width/2+15,height/2-50,10);
+  // whiskers
+  pg.line(width/2-25,height/2-40,width/2-60,height/2-40);
+  pg.line(width/2+25,height/2-40,width/2+60,height/2-40);
+  // mouth
+  pg.strokeWeight(2);
+  pg.arc(width/2,height/2-35,15,10,0,PI);
+}
 
-  if(animals.includes(promptWord)) drawAnimal();
-  else if(nature.includes(promptWord)) drawNature(promptWord);
-  else if(objects.includes(promptWord)) drawObject(promptWord);
-  else if(food.includes(promptWord)) drawFood(promptWord);
-  else { for(let i=0;i<200;i++){ fuzzyBrush(baseGraphics,random(width),random(height),random(20,80),[random(255),random(255),random(255)]); } }
+function drawDog(pg){
+  // body
+  fuzzyBrush(pg,width/2,height/2+30,100,[160,82,45]);
+  // head
+  fuzzyBrush(pg,width/2,height/2-40,60,[160,82,45]);
+  // ears
+  fuzzyBrush(pg,width/2-40,height/2-60,30,[160,82,45]);
+  fuzzyBrush(pg,width/2+40,height/2-60,30,[160,82,45]);
+  // eyes
+  pg.fill(0); pg.ellipse(width/2-10,height/2-45,10); pg.ellipse(width/2+10,height/2-45,10);
+  // nose
+  pg.fill(0); pg.ellipse(width/2,height/2-30,15,10);
+  // mouth
+  pg.noFill(); pg.stroke(0); pg.strokeWeight(2);
+  pg.arc(width/2,height/2-20,30,15,0,PI);
+}
+
+function drawBird(pg){
+  // body
+  fuzzyBrush(pg,width/2,height/2,60,[255,255,100]);
+  // wings
+  pg.triangle(width/2-30,height/2,width/2-50,height/2-20,width/2-10,height/2-20);
+  pg.triangle(width/2+30,height/2,width/2+50,height/2-20,width/2+10,height/2-20);
+  // eyes
+  pg.fill(0); pg.ellipse(width/2,height/2-10,8);
+}
+
+// Main prompt dispatcher
+function drawPrompt(){
+  if(promptWord.includes("bear")) drawBear(baseGraphics);
+  else if(promptWord.includes("cat")) drawCat(baseGraphics);
+  else if(promptWord.includes("dog")) drawDog(baseGraphics);
+  else if(promptWord.includes("bird")) drawBird(baseGraphics);
+  else if(promptWord.includes("sun")) animatedObjects.push({type:'sun',x:width/2,y:height/2,angle:0});
+  else if(promptWord.includes("balloon")) animatedObjects.push({type:'balloon',x:width/2,y:height/2-50});
+  else if(promptWord.includes("star")) animatedObjects.push({type:'star',x:random(width),y:random(height),size:random(5,15)});
+  else { // fallback abstract
+    for(let i=0;i<200;i++){ fuzzyBrush(baseGraphics,random(width),random(height),random(20,80),[random(255),random(255),random(255)]);}
+  }
 }
 </script>
 </body>
