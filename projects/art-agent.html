@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painterly Generative Art Agent</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0; 
+      font-family: sans-serif; 
+      background: #111; 
+      color: #eee;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+    }
+    #controls {
+      margin: 10px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    input, button, label {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      cursor: pointer;
+      background: #444; 
+      color: white;
+    }
+    button:hover {
+      background: #666;
+    }
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.85em;
+    }
+    canvas {
+      border: 2px solid #333;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Painterly Generative Art Agent</h1>
+  <div id="controls">
+    <input id="prompt" placeholder="Enter a prompt (e.g. forest sunset)" size="30">
+    <button onclick="generateArt()">Generate</button>
+    <button onclick="saveCanvas('artwork','png')">Save PNG</button>
+    <button onclick="clearCanvas()">Clear</button>
+
+    <div class="slider-group">
+      <label for="speed">Brush Speed</label>
+      <input type="range" id="speed" min="1" max="20" value="5">
+    </div>
+
+    <div class="slider-group">
+      <label for="density">Density</label>
+      <input type="range" id="density" min="100" max="2000" value="600" step="100">
+    </div>
+  </div>
+  <script>
+    let palettes = {
+      "forest": ["#2E4600", "#486B00", "#A2C523", "#7D4427", "#DAD6CA"],
+      "sunset": ["#FF5E5B", "#D72638", "#FFB400", "#FBB13C", "#F5E663"],
+      "neon": ["#39FF14", "#FF2079", "#00F0FF", "#F000FF", "#FFD319"],
+      "ocean": ["#012A4A", "#0077B6", "#0096C7", "#00B4D8", "#90E0EF"],
+      "pastel": ["#FFD6E0", "#FFB6B9", "#FAE3D9", "#BBDED6", "#8AC6D1"]
+    };
+
+    let currentPalette = [];
+    let brushStyle = "default";
+    let strokes = [];
+    let painted = 0;
+    let painting = false;
+    let brushSpeed = 5;
+    let maxStrokes = 600;
+
+    function pickPalette(prompt) {
+      let lower = prompt.toLowerCase();
+      for (let key in palettes) {
+        if (lower.includes(key)) {
+          brushStyle = key;
+          return palettes[key];
+        }
+      }
+      brushStyle = "default";
+      return ["#eee", "#aaa", "#666", "#333"];
+    }
+
+    function setup() {
+      let cnv = createCanvas(600, 400);
+      cnv.parent(document.body);
+      background("#111");
+      noLoop();
+    }
+
+    function painterlyStroke(x, y, col) {
+      noStroke();
+      let alpha = hex(floor(random(60,180)), 2);
+      let c = col + alpha;
+
+      if (brushStyle === "forest") {
+        fill(c);
+        ellipse(x + random(-15,15), y + random(-15,15), random(20,50), random(10,30));
+      } 
+      else if (brushStyle === "ocean") {
+        stroke(c);
+        strokeWeight(random(1,3));
+        noFill();
+        arc(x, y, random(30,70), random(20,50), random(TWO_PI), random(TWO_PI));
+      }
+      else if (brushStyle === "sunset") {
+        noStroke();
+        fill(c);
+        ellipse(x, y, random(30,80));
+      }
+      else if (brushStyle === "neon") {
+        stroke(c);
+        strokeWeight(random(2,5));
+        line(x, y, x + random(-40,40), y + random(-40,40));
+      }
+      else if (brushStyle === "pastel") {
+        noStroke();
+        fill(c);
+        ellipse(x + random(-10,10), y + random(-10,10), random(15,40));
+      }
+      else {
+        fill(c);
+        ellipse(x, y, random(10,40));
+      }
+    }
+
+    function generateArt() {
+      background("#111");
+      painted = 0;
+      strokes = [];
+      let prompt = document.getElementById("prompt").value;
+      currentPalette = pickPalette(prompt);
+
+      // read sliders
+      brushSpeed = parseInt(document.getElementById("speed").value);
+      maxStrokes = parseInt(document.getElementById("density").value);
+
+      for (let i=0; i<maxStrokes; i++) {
+        strokes.push({
+          x: random(width),
+          y: random(height),
+          col: random(currentPalette)
+        });
+      }
+      painting = true;
+      loop();
+    }
+
+    function draw() {
+      if (painting && painted < strokes.length) {
+        for (let i=0; i<brushSpeed; i++) {
+          if (painted < strokes.length) {
+            let s = strokes[painted];
+            painterlyStroke(s.x, s.y, s.col);
+            painted++;
+          }
+        }
+      } else {
+        noLoop();
+      }
+    }
+
+    function clearCanvas() {
+      clear();
+      background("#111");
+      painting = false;
+      noLoop();
+    }
+  </script>
+</body>
+</html>
