@@ -38,6 +38,15 @@ body {
   animation: fadeIn 1s ease-out;
 }
 
+.demo-description {
+  max-width: 700px;
+  margin: 12px auto 30px auto;
+  color: var(--muted);
+  font-size: 1rem;
+  text-align: center;
+  animation: fadeIn 1s ease-out;
+}
+
 .instructions-column, .chat-column {
   background: var(--card);
   border-radius: 16px;
@@ -187,6 +196,13 @@ button.send-btn:hover {
 <h1 style="text-align:center; color: var(--accent); margin-top:40px; font-size:2.2rem;">
   Instruction-Based Custom AI Agent Demo
 </h1>
+
+<div class="demo-description fade-in">
+  <p>
+    This demo showcases an instruction-based AI agent that answers questions strictly according to the predefined instructions.
+    You can provide custom instructions on the left, and the AI will generate responses on the right, highlighting which instruction was used.
+  </p>
+</div>
 
 <div class="container">
 
