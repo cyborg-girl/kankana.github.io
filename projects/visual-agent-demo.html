@@ -33,23 +33,34 @@
   .container {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-top: 20px;
-    flex-wrap: wrap;
     align-items: flex-start;
+    gap: 40px; /* space between camera and iframe */
+    margin-top: 30px;
+    flex-wrap: wrap;
   }
   #cameraBox {
-    position: relative;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   #webcam, #overlay {
     position: absolute;
     top: 0;
     left: 0;
   }
-  #webcam { opacity: 0; } /* hide live video, only overlay shows paused frame */
+  #cameraWrapper {
+    position: relative;
+    width: 640px;
+    height: 480px;
+  }
+  #webcam { opacity: 0; } /* hide live video, only canvas shown */
   canvas { border: 2px solid #fff; }
-  iframe { width: 600px; height: 480px; border: 2px solid #ccc; background: #fff; }
+  iframe { 
+    width: 600px; 
+    height: 480px; 
+    border: 2px solid #ccc; 
+    background: #fff; 
+  }
   button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; color: #000; }
 </style>
 </head>
@@ -60,16 +71,17 @@
 <h1>Visual AI Agent Demo</h1>
 <div class="container">
   <div id="cameraBox">
-    <video id="webcam" autoplay playsinline width="640" height="480"></video>
-    <canvas id="overlay" width="640" height="480"></canvas>
-    <br>
+    <div id="cameraWrapper">
+      <video id="webcam" autoplay playsinline width="640" height="480"></video>
+      <canvas id="overlay" width="640" height="480"></canvas>
+    </div>
     <button id="restartButton">Restart Camera</button>
   </div>
   <iframe id="wikiFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
 
 <script>
-// Particles.js config
+// Particles.js
 particlesJS("particles-js", {
   particles: {
     number: { value: 80 },
@@ -101,7 +113,6 @@ const dsTerms = [
   "Supervised learning","Unsupervised learning","Clustering","Regression analysis"
 ];
 
-// Pick a random DS term
 function getRandomTerm() {
     return dsTerms[Math.floor(Math.random() * dsTerms.length)];
 }
@@ -113,16 +124,12 @@ const faceDetection = new FaceDetection({
 faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
 
 faceDetection.onResults(results => {
-    // If already paused, draw frozen frame
     if (pausedFrame) {
         ctx.putImageData(pausedFrame, 0, 0);
         return;
     }
-
-    // Draw live feed frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Draw bounding boxes
     results.detections.forEach(detection => {
         const box = detection.boundingBox;
         ctx.strokeStyle = 'lime';
@@ -137,16 +144,12 @@ faceDetection.onResults(results => {
 
     if (results.detections.length > 0 && !detectedOnce) {
         detectedOnce = true;
-
-        // Capture paused frame
         pausedFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
         stopCamera();
         triggerAction();
     }
 });
 
-// Start camera
 function startCamera() {
     detectedOnce = false;
     pausedFrame = null;
@@ -158,36 +161,38 @@ function startCamera() {
     camera.start();
 }
 
-// Stop camera (pause at current frame)
 function stopCamera() {
     if (camera) {
         camera.stop();
         camera = null;
-        console.log("Camera paused on first detection.");
     }
 }
 
-// Trigger search → Wikipedia → force light mode
 function triggerAction() {
     const term = getRandomTerm();
     iframe.src = `https://www.google.com/search?q=${encodeURIComponent(term)}+site:en.wikipedia.org&btnI=I`;
-    console.log(`Face detected! Searching for Wikipedia article: ${term}`);
+    console.log(`Face detected! Wikipedia article: ${term}`);
 }
 
-// Ensure Wikipedia loads in light mode
-iframe.onload = () => {
-  if (iframe.src.includes("wikipedia.org") && !iframe.src.includes("safemode=1")) {
-    iframe.src = iframe.src + (iframe.src.includes("?") ? "&" : "?") + "safemode=1";
+// Force light mode once Wikipedia loads
+iframe.addEventListener("load", () => {
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    if (doc) {
+      const style = doc.createElement("style");
+      style.innerHTML = `
+        body { background: #fff !important; color: #000 !important; }
+        #mw-panel, .vector-header, .vector-sticky-header { background: #f8f9fa !important; color: #000 !important; }
+      `;
+      doc.head.appendChild(style);
+    }
+  } catch (e) {
+    console.log("Cross-origin restriction: cannot inject styles directly.");
   }
-};
-
-// Restart button
-restartBtn.addEventListener('click', () => {
-    startCamera();
-    console.log("Camera restarted.");
 });
 
-// Start camera on load
+restartBtn.addEventListener('click', () => startCamera());
+
 startCamera();
 </script>
 </body>
