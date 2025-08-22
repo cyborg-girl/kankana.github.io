@@ -1,88 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>AI Visual Agent - Text-to-Image Demo</title>
-<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
-<style>
-body { background: #111; color: #eee; font-family: sans-serif; text-align: center; }
-canvas { margin-top: 10px; border: 2px solid #333; }
-input, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
-button { cursor: pointer; background: #444; color: white; }
-button:hover { background: #666; }
-#loading { margin-top: 10px; color: #ff0; }
-</style>
+  <meta charset="UTF-8">
+  <title>AI Visual Agent - Text-to-Image Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Dark theme styling -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #121212;
+      color: #ffffff;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    h1 { margin-top: 40px; font-size: 2em; }
+    input, button {
+      padding: 12px;
+      font-size: 16px;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    input { width: 50%; max-width: 400px; }
+    button {
+      cursor: pointer;
+      background-color: #ff4081;
+      color: #fff;
+      transition: 0.3s;
+    }
+    button:hover { background-color: #e91e63; }
+    #status { margin-top: 20px; }
+    #output img {
+      margin: 20px 10px;
+      max-width: 80%;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      top: 0;
+      left: 0;
+    }
+  </style>
+
+  <!-- Particles.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+  <!-- Transformers WASM for Stable Diffusion -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js"></script>
 </head>
 <body>
-<h1>🎨 AI Visual Agent - Text-to-Image Demo</h1>
-<input id="prompt" placeholder="Type a prompt (e.g., 'bear in a spaceship')">
-<button onclick="generateImage()">Generate Image</button>
-<button onclick="saveCanvas('drawing','png')">Save PNG</button>
-<div id="loading"></div>
-<div id="output"></div>
 
-<script>
-let canvas;
-let generatedImg;
+  <div id="particles-js"></div>
 
-function setup() {
-  canvas = createCanvas(600, 400);
-  canvas.parent(document.body);
-  background("#222");
-}
+  <h1>AI Visual Agent - Text-to-Image Demo</h1>
+  <input type="text" id="prompt" placeholder="Enter your creative prompt">
+  <button onclick="generateImage()">Generate Image</button>
 
-async function generateImage() {
-  const prompt = document.getElementById('prompt').value;
-  const loadingDiv = document.getElementById('loading');
-  loadingDiv.innerText = "Generating image, please wait...";
-  
-  if(!prompt) {
-    alert("Please enter a prompt!");
-    loadingDiv.innerText = "";
-    return;
-  }
+  <div id="status"></div>
+  <div id="output"></div>
 
-  // HuggingFace Inference API URL
-  const API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2";
-  const API_TOKEN = "YOUR_HUGGINGFACE_API_KEY"; // replace with your key
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${API_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ inputs: prompt })
+  <script>
+    // Particles.js configuration
+    particlesJS('particles-js', {
+      "particles": {
+        "number": { "value": 80 },
+        "size": { "value": 3 },
+        "color": { "value": "#ffffff" },
+        "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 },
+        "move": { "enable": true, "speed": 2 }
+      }
     });
 
-    if(!response.ok) throw new Error("API error");
+    let model;
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
+    async function loadModel() {
+      document.getElementById('status').innerText = 'Loading AI model... (may take 30-60s)';
+      model = await window.transformers.pipeline('text-to-image', 'Xenova/stable-diffusion');
+      document.getElementById('status').innerText = 'Model loaded! Enter a prompt to generate an image.';
+    }
 
-    // Display image on canvas
-    generatedImg = createImg(url, '', '', ()=>{ 
-      generatedImg.hide(); 
-      image(generatedImg,0,0,width,height); 
-      loadingDiv.innerText = ""; 
-    });
-  } catch(e) {
-    console.error(e);
-    loadingDiv.innerText = "API unavailable. Showing fallback abstract art.";
-    fallbackArt();
-  }
-}
+    async function generateImage() {
+      if (!model) return alert('Model not loaded yet!');
+      const prompt = document.getElementById('prompt').value;
+      if (!prompt) return alert('Please enter a prompt');
 
-// Painterly fallback abstract art
-function fallbackArt() {
-  background("#222");
-  for(let i=0;i<200;i++){
-    noStroke();
-    fill(random(255),random(255),random(255),100);
-    ellipse(random(width),random(height),random(20,80));
-  }
-}
-</script>
+      document.getElementById('status').innerText = 'Generating image...';
+      const output = await model(prompt);
+
+      // Display image
+      const imgUrl = output[0].image;
+      const outputDiv = document.getElementById('output');
+      const img = document.createElement('img');
+      img.src = imgUrl;
+      outputDiv.innerHTML = ''; // clear previous
+      outputDiv.appendChild(img);
+
+      document.getElementById('status').innerText = 'Done!';
+    }
+
+    loadModel();
+  </script>
 </body>
 </html>
