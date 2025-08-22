@@ -75,12 +75,10 @@ faceDetection.onResults(results => {
 
     canvas.toBlob(async blob => {
       stopCamera(); // Stop after capture
-
-      // Send blob to Bing Visual Search
-      const formData = new FormData();
-      formData.append("image", blob, "capture.png");
-
       try {
+        const formData = new FormData();
+        formData.append("image", blob, "capture.png");
+
         const res = await fetch(BING_SEARCH_URL, {
           method: "POST",
           headers: { "Ocp-Apim-Subscription-Key": BING_API_KEY },
@@ -116,32 +114,44 @@ function stopCamera() {
 
 restartBtn.addEventListener('click', startCamera);
 
-// Build results in iframe
+// Display closest images in iframe
 function displayResultsInIframe(data, blob){
   let html = `<html><body style="font-family:sans-serif; padding:10px; background:#fff; color:#000;">`;
-  html += `<h2>Visual Search Results</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`;
+  html += `<h2>Closest Images</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`;
 
+  let added = 0;
+
+  // Try main tags first
   if(data && data.tags){
-    const tags = data.tags;
-    tags.forEach(tag => {
+    data.tags.forEach(tag => {
       (tag.actions || []).forEach(action => {
-        if(action.actionType === "VisualSearch" && action.data && action.data.value){
-          action.data.value.forEach(item => {
-            if(item.thumbnailUrl){
-              html += `<a href="${item.hostPageUrl}" target="_blank">
-                        <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
-                       </a>`;
-            }
-          });
-        }
+        const values = (action.data && action.data.value) || [];
+        values.forEach(item => {
+          if(item.thumbnailUrl && added < 6){
+            html += `<a href="${item.hostPageUrl || '#'}" target="_blank">
+                      <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
+                     </a>`;
+            added++;
+          }
+        });
       });
     });
   }
 
-  // Fallback: show captured image if no results
-  if(!data || !data.tags || html === `<html><body style="font-family:sans-serif; padding:10px; background:#fff; color:#000;"><h2>Visual Search Results</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`){
+  // Check visuallySimilarImages fallback
+  if(added === 0 && data && data.visuallySimilarImages){
+    data.visuallySimilarImages.slice(0,6).forEach(item => {
+      html += `<a href="${item.webSearchUrl || '#'}" target="_blank">
+                <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
+               </a>`;
+      added++;
+    });
+  }
+
+  // Final fallback: captured image
+  if(added === 0){
     const imgURL = URL.createObjectURL(blob);
-    html += `<p>No Bing results, showing captured image:</p>`;
+    html += `<p>No similar images found, showing captured image:</p>`;
     html += `<img src="${imgURL}" width="300" style="border:1px solid #000"/>`;
   }
 
