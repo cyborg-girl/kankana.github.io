@@ -70,11 +70,12 @@ faceDetection.onResults(results => {
   if(results.detections && results.detections.length > 0 && !detectedOnce){
     detectedOnce = true;
 
-    // Capture the frame before stopping camera
+    // Capture the full canvas (entire webcam frame)
     pausedFrame = ctx.getImageData(0,0,canvas.width,canvas.height);
 
     canvas.toBlob(async blob => {
       stopCamera(); // Stop after capture
+
       try {
         const formData = new FormData();
         formData.append("image", blob, "capture.png");
@@ -148,10 +149,10 @@ function displayResultsInIframe(data, blob){
     });
   }
 
-  // Final fallback: captured image
+  // Final fallback: captured full webcam image
   if(added === 0){
     const imgURL = URL.createObjectURL(blob);
-    html += `<p>No similar images found, showing captured image:</p>`;
+    html += `<p>No similar images found, showing full captured image:</p>`;
     html += `<img src="${imgURL}" width="300" style="border:1px solid #000"/>`;
   }
 
