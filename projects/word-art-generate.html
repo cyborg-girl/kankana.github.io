@@ -45,6 +45,13 @@
       font-style: italic;
     }
 
+    #output img {
+      margin: 20px 10px;
+      max-width: 80%;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
     #particles-js {
       position: fixed;
       width: 100%;
@@ -57,6 +64,8 @@
 
   <!-- Particles.js library -->
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <!-- Transformers WASM library -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js"></script>
 </head>
 <body>
 
@@ -65,11 +74,12 @@
   <h1>AI Visual Agent - Text-to-Image Demo</h1>
 
   <div>
-    <input type="text" id="prompt" placeholder="Enter your prompt">
-    <button onclick="openAIPage()">Generate Image</button>
+    <input type="text" id="prompt" placeholder="Enter your creative prompt">
+    <button onclick="generateImage()">Generate Image</button>
   </div>
 
-  <div id="status">Click "Generate Image" to open the AI demo in a new tab.</div>
+  <div id="status">Loading model... please wait (may take 30-60 seconds first time)</div>
+  <div id="output"></div>
 
   <script>
     // Particles.js configuration
@@ -83,18 +93,40 @@
       }
     });
 
-    function openAIPage() {
-      const prompt = document.getElementById('prompt').value.trim();
-      let url = 'https://huggingface.co/spaces/stabilityai/stable-diffusion';
-      
-      // If user typed a prompt, append it as query (some Spaces support ?prompt=)
-      if(prompt) {
-        url += `?__theme=dark&prompt=${encodeURIComponent(prompt)}`;
-      }
+    let model;
 
-      window.open(url, '_blank');
-      document.getElementById('status').innerText = 'AI demo opened in a new tab!';
+    async function loadModel() {
+      document.getElementById('status').innerText = 'Loading AI model... (may take 30-60s)';
+      // Load a lightweight Stable Diffusion model in-browser
+      model = await window.transformers.pipeline(
+        'text-to-image',
+        'Xenova/stable-diffusion-mini' // lightweight browser-friendly model
+      );
+      document.getElementById('status').innerText = 'Model loaded! Enter a prompt and generate an image.';
     }
+
+    async function generateImage() {
+      const prompt = document.getElementById('prompt').value.trim();
+      if (!prompt) return alert('Please enter a prompt');
+      if (!model) return alert('Model is still loading');
+
+      document.getElementById('status').innerText = 'Generating image... this may take a few seconds';
+      
+      try {
+        const output = await model(prompt, { height: 512, width: 512 });
+        const imgUrl = output[0].image;
+
+        const outputDiv = document.getElementById('output');
+        outputDiv.innerHTML = `<img src="${imgUrl}" alt="Generated Image">`;
+
+        document.getElementById('status').innerText = 'Done!';
+      } catch (e) {
+        console.error(e);
+        document.getElementById('status').innerText = 'Error generating image. Check console.';
+      }
+    }
+
+    loadModel();
   </script>
 
 </body>
