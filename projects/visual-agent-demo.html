@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual AI Agent Demo with Google</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<style>
+  body { font-family: sans-serif; background: #222; color: #fff; text-align: center; }
+  .container { display: flex; justify-content: center; gap: 20px; margin-top: 20px; }
+  video, canvas { border: 2px solid #fff; }
+  iframe { width: 600px; height: 480px; border: 2px solid #fff; }
+</style>
+</head>
+<body>
+
+<h1>Visual AI Agent Demo</h1>
+<div class="container">
+  <div>
+    <video id="webcam" autoplay playsinline width="640" height="480"></video>
+    <canvas id="overlay" width="640" height="480"></canvas>
+  </div>
+  <iframe id="googleFrame" src="https://www.google.com" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<script>
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('overlay');
+const ctx = canvas.getContext('2d');
+const iframe = document.getElementById('googleFrame');
+
+// Access webcam
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => { video.srcObject = stream; })
+  .catch(err => { console.error("Error accessing webcam:", err); });
+
+// Setup MediaPipe Face Detection
+const faceDetection = new FaceDetection({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
+faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+
+faceDetection.onResults(results => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (results.detections.length > 0) {
+        results.detections.forEach(detection => {
+            const box = detection.boundingBox;
+            ctx.strokeStyle = 'lime';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(box.xCenter - box.width/2, box.yCenter - box.height/2, box.width, box.height);
+        });
+        triggerAction();
+    }
+});
+
+// Process webcam frames
+const camera = new Camera(video, {
+    onFrame: async () => { await faceDetection.send({image: video}); },
+    width: 640,
+    height: 480
+});
+camera.start();
+
+// Trigger "I'm Feeling Lucky" by navigating iframe to Google search URL
+let lastAction = 0;
+function triggerAction() {
+    const now = Date.now();
+    if (now - lastAction > 2000) { // Limit every 2 seconds
+        const query = "OpenAI"; // Change search term here
+        iframe.src = `https://www.google.com/search?q=${encodeURIComponent(query)}&btnI=I`;
+        console.log("Face detected! Navigating iframe to I'm Feeling Lucky result.");
+        lastAction = now;
+    }
+}
+</script>
+
+</body>
+</html>
