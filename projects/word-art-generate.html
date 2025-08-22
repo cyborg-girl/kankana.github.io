@@ -15,7 +15,12 @@
       text-align: center;
       overflow-x: hidden;
     }
-    h1 { margin-top: 40px; font-size: 2em; }
+
+    h1 {
+      margin-top: 40px;
+      font-size: 2em;
+    }
+
     input, button {
       padding: 12px;
       font-size: 16px;
@@ -23,21 +28,22 @@
       border-radius: 5px;
       border: none;
     }
+
     input { width: 50%; max-width: 400px; }
+
     button {
       cursor: pointer;
       background-color: #ff4081;
       color: #fff;
       transition: 0.3s;
     }
+
     button:hover { background-color: #e91e63; }
-    #status { margin-top: 20px; }
-    #output img {
-      margin: 20px 10px;
-      max-width: 80%;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+
+    #status {
+      margin-top: 20px;
     }
+
     #particles-js {
       position: fixed;
       width: 100%;
@@ -46,24 +52,35 @@
       top: 0;
       left: 0;
     }
+
+    iframe {
+      margin-top: 30px;
+      border: 1px solid #444;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 900px;
+      height: 700px;
+    }
   </style>
 
   <!-- Particles.js library -->
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-
-  <!-- Transformers WASM for Stable Diffusion -->
-  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js"></script>
 </head>
 <body>
 
   <div id="particles-js"></div>
 
   <h1>AI Visual Agent - Text-to-Image Demo</h1>
-  <input type="text" id="prompt" placeholder="Enter your creative prompt">
-  <button onclick="generateImage()">Generate Image</button>
 
-  <div id="status"></div>
-  <div id="output"></div>
+  <div>
+    <input type="text" id="prompt" placeholder="Enter a prompt (optional)">
+    <button onclick="focusIframe()">Generate Image</button>
+  </div>
+
+  <div id="status">Click "Generate Image" to use the AI demo below.</div>
+
+  <!-- Hugging Face Space iframe -->
+  <iframe id="ai-space" src="https://huggingface.co/spaces/stabilityai/stable-diffusion" allow="fullscreen"></iframe>
 
   <script>
     // Particles.js configuration
@@ -77,34 +94,13 @@
       }
     });
 
-    let model;
-
-    async function loadModel() {
-      document.getElementById('status').innerText = 'Loading AI model... (may take 30-60s)';
-      model = await window.transformers.pipeline('text-to-image', 'Xenova/stable-diffusion');
-      document.getElementById('status').innerText = 'Model loaded! Enter a prompt to generate an image.';
+    function focusIframe() {
+      // Just scroll to iframe for UX
+      const iframe = document.getElementById('ai-space');
+      iframe.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('status').innerText = 'Interact with the AI below to generate images.';
     }
-
-    async function generateImage() {
-      if (!model) return alert('Model not loaded yet!');
-      const prompt = document.getElementById('prompt').value;
-      if (!prompt) return alert('Please enter a prompt');
-
-      document.getElementById('status').innerText = 'Generating image...';
-      const output = await model(prompt);
-
-      // Display image
-      const imgUrl = output[0].image;
-      const outputDiv = document.getElementById('output');
-      const img = document.createElement('img');
-      img.src = imgUrl;
-      outputDiv.innerHTML = ''; // clear previous
-      outputDiv.appendChild(img);
-
-      document.getElementById('status').innerText = 'Done!';
-    }
-
-    loadModel();
   </script>
+
 </body>
 </html>
