@@ -3,25 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visual AI Agent Demo - Bing Visual Search</title>
+<title>Visual AI Agent Demo - Step Demo</title>
 
+<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+
 <style>
-  body { font-family: sans-serif; margin:0; background:#121212; color:#fff; text-align:center; }
-  .container { display:flex; justify-content:center; gap:40px; margin-top:20px; flex-wrap:wrap; }
-  #cameraBox { display:flex; flex-direction:column; align-items:center; }
-  #cameraWrapper { position:relative; width:640px; height:480px; }
-  #webcam { width:640px; height:480px; border:2px solid #fff; }
-  canvas { position:absolute; top:0; left:0; width:640px; height:480px; border:2px solid lime; }
-  iframe { width:640px; height:480px; border:2px solid #ccc; background:#fff; }
-  button { padding:10px 20px; font-size:16px; margin-top:10px; cursor:pointer; color:#000; }
+body { font-family: sans-serif; margin:0; background:#121212; color:#fff; text-align:center; overflow-x:hidden; }
+#particles-js { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; }
+.container { display:flex; justify-content:center; align-items:flex-start; gap:40px; margin-top:30px; flex-wrap:wrap; }
+#cameraBox { display:flex; flex-direction:column; align-items:center; }
+#cameraWrapper { position:relative; width:640px; height:480px; }
+#webcam { width:640px; height:480px; border:2px solid #fff; }
+canvas { position:absolute; top:0; left:0; width:640px; height:480px; border:2px solid lime; }
+iframe { width:600px; height:480px; border:2px solid #ccc; background:#fff; }
+button { padding:10px 20px; font-size:16px; margin-top:20px; cursor:pointer; color:#000; }
+#explanation { font-size:18px; margin-top:15px; color:#ff0; }
 </style>
 </head>
 <body>
 
-<h1>Visual AI Agent Demo - Bing Visual Search</h1>
+<div id="particles-js"></div>
+
+<h1>Visual AI Agent Demo - Step-by-Step</h1>
+<div id="explanation">Waiting for face detection...</div>
 <div class="container">
   <div id="cameraBox">
     <div id="cameraWrapper">
@@ -30,22 +39,46 @@
     </div>
     <button id="restartButton">Restart Camera</button>
   </div>
-  <iframe id="resultsFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+  <iframe id="wikiFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
 
 <script>
-const BING_API_KEY = "YOUR_BING_API_KEY_HERE"; // <-- replace with your key
-const BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/visualsearch";
+// Particles.js
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 80 },
+    color: { value: "#ffffff" },
+    shape: { type: "circle" },
+    opacity: { value: 0.5 },
+    size: { value: 3 },
+    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
+    move: { enable: true, speed: 2 }
+  },
+  interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
+});
 
 const video = document.getElementById('webcam');
 const canvas = document.getElementById('overlay');
 const ctx = canvas.getContext('2d');
-const iframe = document.getElementById('resultsFrame');
+const iframe = document.getElementById('wikiFrame');
 const restartBtn = document.getElementById('restartButton');
+const explanation = document.getElementById('explanation');
 
 let camera = null;
 let detectedOnce = false;
 let pausedFrame = null;
+
+// Data science terms
+const dsTerms = [
+  "Data science","Machine learning","Artificial intelligence","Deep learning",
+  "Neural networks","Big data","Statistics","Predictive analytics",
+  "Natural language processing","Computer vision","Reinforcement learning",
+  "Supervised learning","Unsupervised learning","Clustering","Regression analysis"
+];
+
+function getRandomTerm() {
+  return dsTerms[Math.floor(Math.random() * dsTerms.length)];
+}
 
 // MediaPipe Face Detection
 const faceDetection = new FaceDetection({
@@ -57,43 +90,19 @@ faceDetection.onResults(results => {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-  if(results.detections){
-    results.detections.forEach(det => {
-      const box = det.boundingBox;
-      ctx.strokeStyle = 'lime';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(box.xCenter-box.width/2, box.yCenter-box.height/2, box.width, box.height);
-    });
-  }
+  results.detections.forEach(d => {
+    const box = d.boundingBox;
+    ctx.strokeStyle = 'lime';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(box.xCenter-box.width/2, box.yCenter-box.height/2, box.width, box.height);
+  });
 
-  // Only trigger once
-  if(results.detections && results.detections.length > 0 && !detectedOnce){
+  if(results.detections.length > 0 && !detectedOnce){
     detectedOnce = true;
-
-    // Capture the full canvas (entire webcam frame)
     pausedFrame = ctx.getImageData(0,0,canvas.width,canvas.height);
-
-    canvas.toBlob(async blob => {
-      stopCamera(); // Stop after capture
-
-      try {
-        const formData = new FormData();
-        formData.append("image", blob, "capture.png");
-
-        const res = await fetch(BING_SEARCH_URL, {
-          method: "POST",
-          headers: { "Ocp-Apim-Subscription-Key": BING_API_KEY },
-          body: formData
-        });
-        const data = await res.json();
-        displayResultsInIframe(data, blob);
-      } catch(e){
-        console.error("Error fetching Bing Visual Search:", e);
-        displayResultsInIframe(null, blob); // fallback
-      }
-    }, "image/png");
+    stopCamera();
+    runDemoSteps();
   } else if(pausedFrame){
-    // Keep the last frame visible after detection
     ctx.putImageData(pausedFrame,0,0);
   }
 });
@@ -101,6 +110,7 @@ faceDetection.onResults(results => {
 function startCamera() {
   detectedOnce = false;
   pausedFrame = null;
+  explanation.textContent = "Waiting for face detection...";
   camera = new Camera(video, {
     onFrame: async () => { await faceDetection.send({image: video}); },
     width: 640,
@@ -110,58 +120,42 @@ function startCamera() {
 }
 
 function stopCamera() {
-  if(camera){ camera.stop(); camera = null; }
+  if(camera){ camera.stop(); camera=null; }
 }
+
+// Step-by-step demo with 5-second gaps
+async function runDemoSteps() {
+  const term = getRandomTerm();
+
+  explanation.textContent = `Step 1: Face detected. Pausing camera...`;
+  await new Promise(r=>setTimeout(r,5000));
+
+  explanation.textContent = `Step 2: Preparing Google search for "${term}"...`;
+  await new Promise(r=>setTimeout(r,5000));
+
+  explanation.textContent = `Step 3: Performing Google search...`;
+  // Only search, no "I'm Feeling Lucky"
+  iframe.src = `https://www.google.com/search?q=${encodeURIComponent(term)}+site:en.wikipedia.org`;
+  await new Promise(r=>setTimeout(r,5000));
+
+  explanation.textContent = `Step 4: Search complete! You can browse results in the iframe.`;
+}
+
+// Force light mode once iframe loads (Wikipedia or search)
+iframe.addEventListener("load", ()=>{
+  try{
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    if(doc){
+      const style = doc.createElement("style");
+      style.innerHTML = `
+        body { background:#fff !important; color:#000 !important; }
+      `;
+      doc.head.appendChild(style);
+    }
+  } catch(e){ console.log("Cross-origin: cannot inject style."); }
+});
 
 restartBtn.addEventListener('click', startCamera);
-
-// Display closest images in iframe
-function displayResultsInIframe(data, blob){
-  let html = `<html><body style="font-family:sans-serif; padding:10px; background:#fff; color:#000;">`;
-  html += `<h2>Closest Images</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`;
-
-  let added = 0;
-
-  // Try main tags first
-  if(data && data.tags){
-    data.tags.forEach(tag => {
-      (tag.actions || []).forEach(action => {
-        const values = (action.data && action.data.value) || [];
-        values.forEach(item => {
-          if(item.thumbnailUrl && added < 6){
-            html += `<a href="${item.hostPageUrl || '#'}" target="_blank">
-                      <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
-                     </a>`;
-            added++;
-          }
-        });
-      });
-    });
-  }
-
-  // Check visuallySimilarImages fallback
-  if(added === 0 && data && data.visuallySimilarImages){
-    data.visuallySimilarImages.slice(0,6).forEach(item => {
-      html += `<a href="${item.webSearchUrl || '#'}" target="_blank">
-                <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
-               </a>`;
-      added++;
-    });
-  }
-
-  // Final fallback: captured full webcam image
-  if(added === 0){
-    const imgURL = URL.createObjectURL(blob);
-    html += `<p>No similar images found, showing full captured image:</p>`;
-    html += `<img src="${imgURL}" width="300" style="border:1px solid #000"/>`;
-  }
-
-  html += `</div></body></html>`;
-  const url = URL.createObjectURL(new Blob([html], {type:'text/html'}));
-  iframe.src = url;
-}
-
-// Start camera automatically
 startCamera();
 </script>
 </body>
