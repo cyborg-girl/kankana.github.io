@@ -14,7 +14,6 @@
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <style>
-  /* Dark Theme Styles */
   body {
     font-family: sans-serif;
     margin: 0;
@@ -46,7 +45,6 @@
 </head>
 <body>
 
-<!-- Particles background -->
 <div id="particles-js"></div>
 
 <h1>Visual AI Agent Demo</h1>
@@ -61,7 +59,7 @@
 </div>
 
 <script>
-// Particles.js configuration
+// Particles.js config
 particlesJS("particles-js", {
   particles: {
     number: { value: 80 },
@@ -72,9 +70,7 @@ particlesJS("particles-js", {
     line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
     move: { enable: true, speed: 2 }
   },
-  interactivity: {
-    events: { onhover: { enable: true, mode: "repulse" } }
-  }
+  interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
 });
 
 const video = document.getElementById('webcam');
@@ -84,7 +80,7 @@ const iframe = document.getElementById('googleFrame');
 const restartBtn = document.getElementById('restartButton');
 
 let camera = null;
-let paused = false;
+let detectedOnce = false;
 
 // Random search term generator
 function getRandomSearchTerm() {
@@ -92,7 +88,7 @@ function getRandomSearchTerm() {
     return words[Math.floor(Math.random() * words.length)];
 }
 
-// Initialize MediaPipe Face Detection
+// MediaPipe Face Detection
 const faceDetection = new FaceDetection({
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
 });
@@ -100,29 +96,24 @@ faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
 
 faceDetection.onResults(results => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (results.detections.length > 0 && !paused) {
-        results.detections.forEach(detection => {
-            const box = detection.boundingBox;
-            ctx.strokeStyle = 'lime';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(box.xCenter - box.width/2, box.yCenter - box.height/2, box.width, box.height);
-        });
-        paused = true;  // Pause the camera feed
+
+    results.detections.forEach(detection => {
+        const box = detection.boundingBox;
+        ctx.strokeStyle = 'lime';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(box.xCenter - box.width/2, box.yCenter - box.height/2, box.width, box.height);
+    });
+
+    if (results.detections.length > 0 && !detectedOnce) {
+        detectedOnce = true;
+        stopCamera();
         triggerAction();
-    } else if (!paused) {
-        // draw all detected faces if not paused
-        results.detections.forEach(detection => {
-            const box = detection.boundingBox;
-            ctx.strokeStyle = 'lime';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(box.xCenter - box.width/2, box.yCenter - box.height/2, box.width, box.height);
-        });
     }
 });
 
 // Start camera
 function startCamera() {
-    paused = false;
+    detectedOnce = false;
     camera = new Camera(video, {
         onFrame: async () => { await faceDetection.send({image: video}); },
         width: 640,
@@ -131,10 +122,20 @@ function startCamera() {
     camera.start();
 }
 
-// Trigger Google I'm Feeling Lucky with random term
+// Stop camera (pause)
+function stopCamera() {
+    if (camera) {
+        camera.stop();
+        camera = null;
+        console.log("Camera paused on first detection.");
+    }
+}
+
+// Trigger Google I'm Feeling Lucky with random term (light mode)
 function triggerAction() {
     const randomTerm = getRandomSearchTerm();
-    iframe.src = `https://www.google.com/search?q=${encodeURIComponent(randomTerm)}&btnI=I`;
+    // hl=en ensures light mode, btnI=I triggers I'm Feeling Lucky
+    iframe.src = `https://www.google.com/search?q=${encodeURIComponent(randomTerm)}&btnI=I&hl=en&safe=off`;
     console.log(`Face detected! Searching for: ${randomTerm}`);
 }
 
@@ -146,7 +147,7 @@ restartBtn.addEventListener('click', () => {
 
 // Start camera on page load
 startCamera();
-</script>
 
+</script>
 </body>
 </html>
