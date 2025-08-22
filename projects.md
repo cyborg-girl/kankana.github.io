@@ -30,7 +30,7 @@ permalink: /projects/
   <p>
     Shows a visual AI agent that detects faces in your webcam feed and uses it as a trigger to demonstrate a step-by-step exploration of data science concepts. 
   </p>
-  <a href="/home/projects/visual-agent-demo.html" class="btn">🔍 Try it Live</a>
+  <a href="/home/projects/AI-chatbot.html" class="btn">🔍 Try it Live</a>
 </div>
 
 
