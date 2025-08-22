@@ -14,17 +14,6 @@ permalink: /projects/
 
 
 
-<!-- ## 💡 Sentiment Analyzer -->
-<div class="project-card fade-in-up">
-  <h2>💡 Sentiment Analyzer</h2>
-  <p>
-    Type a sentence and let the AI decide if it’s
-    <strong>Positive</strong>, <strong>Negative</strong>, or <strong>Neutral</strong>.
-  </p>
-  <a href="/home/projects/sentiment.html" class="btn">🔍 Try it Live</a>
-</div>
-
-
 <div class="project-card fade-in-up">
   <h2>📸 Visual AI Agent</h2>
   <p>
@@ -43,7 +32,6 @@ permalink: /projects/
 </div>
 
 
-<!-- You can add more projects in this format -->
 <!-- ## 🎨 Coming Soon -->
 <div class="project-card fade-in-up">
   <h2>🎨 Image Classifier</h2>
@@ -51,6 +39,17 @@ permalink: /projects/
     Upload an image and see the AI predict what it contains.  
   </p>
   <a href="/home/projects/image-classifier.html" class="btn">🔍 Try it Live</a>
+</div>
+
+
+<!-- ## 💡 Sentiment Analyzer -->
+<div class="project-card fade-in-up">
+  <h2>💡 Sentiment Analyzer</h2>
+  <p>
+    Type a sentence and let the AI decide if it’s
+    <strong>Positive</strong>, <strong>Negative</strong>, or <strong>Neutral</strong>.
+  </p>
+  <a href="/home/projects/sentiment.html" class="btn">🔍 Try it Live</a>
 </div>
 
 
