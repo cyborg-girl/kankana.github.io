@@ -1,161 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Visual AI Agent Demo</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #0d1117; /* cvless dark */
-      color: white;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #particles-js {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      top: 0;
-      left: 0;
-    }
-    .container {
-      display: flex;
-      gap: 20px; /* spacing between boxes */
-      padding: 20px;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    .box {
-      background: #161b22;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.6);
-    }
-    video, canvas, iframe {
-      border-radius: 10px;
-      display: block;
-      max-width: 480px;
-    }
-    #restartBtn {
-      margin-top: 10px;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 8px;
-      background: #238636;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    iframe {
-      width: 480px;
-      height: 360px;
-      border: none;
-      background: white; /* light mode */
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual AI Agent Demo - Bing Visual Search</title>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<style>
+  body { font-family: sans-serif; margin: 0; background: #121212; color: #fff; text-align: center; overflow-x: hidden; }
+  .container { display: flex; justify-content: center; align-items: flex-start; gap: 40px; margin-top: 30px; flex-wrap: wrap; }
+  #cameraBox { display: flex; flex-direction: column; align-items: center; }
+  #cameraWrapper { position: relative; width: 640px; height: 480px; }
+  #webcam { display: none; } 
+  canvas { border: 2px solid #fff; }
+  iframe { width: 640px; height: 480px; border: 2px solid #ccc; background: #fff; }
+  button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; color: #000; }
+</style>
 </head>
 <body>
-  <div id="particles-js"></div>
 
-  <div class="container">
-    <!-- Camera box -->
-    <div class="box">
-      <video id="video" autoplay playsinline width="480" height="360"></video>
-      <canvas id="canvas" width="480" height="360" style="display:none;"></canvas>
-      <br>
-      <button id="restartBtn">Restart Camera</button>
+<h1>Visual AI Agent Demo - Bing Visual Search</h1>
+<div class="container">
+  <div id="cameraBox">
+    <div id="cameraWrapper">
+      <video id="webcam" autoplay playsinline width="640" height="480"></video>
+      <canvas id="overlay" width="640" height="480"></canvas>
     </div>
-
-    <!-- Image search iframe -->
-    <div class="box">
-      <iframe id="resultsFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
-    </div>
+    <button id="restartButton">Restart Camera</button>
   </div>
+  <iframe id="resultsFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
 
-  <!-- Face detection library -->
-  <script src="https://unpkg.com/face-api.js"></script>
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+const BING_API_KEY = "YOUR_BING_API_KEY_HERE"; // <-- replace with your key
+const BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/visualsearch";
 
-  <script>
-    // Particles background
-    particlesJS("particles-js", {
-      "particles": {
-        "number": {"value": 80},
-        "size": {"value": 3},
-        "move": {"speed": 2}
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('overlay');
+const ctx = canvas.getContext('2d');
+const iframe = document.getElementById('resultsFrame');
+const restartBtn = document.getElementById('restartButton');
+
+let camera = null;
+let detectedOnce = false;
+
+// MediaPipe Face Detection
+const faceDetection = new FaceDetection({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+});
+faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+
+faceDetection.onResults(results => {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+  results.detections.forEach(det => {
+    const box = det.boundingBox;
+    ctx.strokeStyle = 'lime';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(box.xCenter-box.width/2, box.yCenter-box.height/2, box.width, box.height);
+  });
+
+  if(results.detections.length > 0 && !detectedOnce){
+    detectedOnce = true;
+    stopCamera();
+    sendToBingVisualSearch();
+  }
+});
+
+function startCamera() {
+  detectedOnce = false;
+  camera = new Camera(video, {
+    onFrame: async () => { await faceDetection.send({image: video}); },
+    width: 640,
+    height: 480
+  });
+  camera.start();
+}
+
+function stopCamera() {
+  if(camera){ camera.stop(); camera = null; }
+}
+
+restartBtn.addEventListener('click', () => startCamera());
+
+async function sendToBingVisualSearch() {
+  canvas.toBlob(async blob => {
+    const formData = new FormData();
+    formData.append("image", blob, "capture.png");
+
+    try {
+      const res = await fetch(BING_SEARCH_URL, {
+        method: "POST",
+        headers: { "Ocp-Apim-Subscription-Key": BING_API_KEY },
+        body: formData
+      });
+      const data = await res.json();
+      displayResultsInIframe(data);
+    } catch(e){
+      console.error("Error fetching Bing Visual Search:", e);
+    }
+  }, "image/png");
+}
+
+function displayResultsInIframe(data){
+  let html = `<html><body style="font-family:sans-serif">`;
+  html += `<h2>Visual Search Results</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`;
+
+  const tags = data.tags || [];
+  tags.forEach(tag => {
+    (tag.actions || []).forEach(action => {
+      if(action.actionType === "VisualSearch" && action.data.value){
+        action.data.value.forEach(item => {
+          if(item.thumbnailUrl){
+            html += `<a href="${item.hostPageUrl}" target="_blank">
+                       <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
+                     </a>`;
+          }
+        });
       }
     });
+  });
 
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const restartBtn = document.getElementById('restartBtn');
-    const iframe = document.getElementById('resultsFrame');
-    let cameraStream = null;
-    let paused = false;
+  html += `</div></body></html>`;
+  const blob = new Blob([html], {type: "text/html"});
+  const url = URL.createObjectURL(blob);
+  iframe.src = url;
+}
 
-    // Start camera
-    async function startCamera() {
-      paused = false;
-      canvas.style.display = "none";
-      video.style.display = "block";
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = cameraStream;
-      detectFace();
-    }
-
-    // Pause camera on face detection
-    function pauseCamera() {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      video.style.display = "none";
-      canvas.style.display = "block";
-      paused = true;
-      triggerImageSearch();
-    }
-
-    // Face detection
-    async function detectFace() {
-      await faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
-
-      const interval = setInterval(async () => {
-        if (paused) {
-          clearInterval(interval);
-          return;
-        }
-        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-        if (detections.length > 0) {
-          pauseCamera();
-        }
-      }, 500);
-    }
-
-    // Google image search
-    function triggerImageSearch() {
-      const imageData = canvas.toDataURL("image/png");
-      // NOTE: Google does not support direct base64 image search via simple URL params.
-      // The usual endpoint is https://images.google.com/searchbyimage, but it requires multipart upload.
-      // Workaround: open "lens.google.com" with the captured image as a blob in a new tab
-      // For demo, we just show Google Images main page.
-      iframe.src = "https://images.google.com/";
-      console.log("Face detected → showing Google Images. Uploading directly via iframe is blocked by Google CORS.");
-    }
-
-    // Restart button
-    restartBtn.addEventListener("click", () => {
-      startCamera();
-    });
-
-    // Init
-    startCamera();
-  </script>
+startCamera();
+</script>
 </body>
 </html>
