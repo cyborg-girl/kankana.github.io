@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instruction-based custom AI Chatbot</title>
+
+<!-- CVless Dark Theme -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/cckanishka/cvless-dark/cvless-dark.css">
+
+<style>
+body { font-family: sans-serif; margin: 0; background: #121212; color: #fff; display: flex; flex-direction: column; padding: 20px; }
+h1 { text-align: center; margin-bottom: 20px; }
+.container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
+.panel { background: #1a1a1a; padding: 15px; border-radius: 10px; width: 400px; max-height: 600px; display: flex; flex-direction: column; }
+.panel h2 { margin-top: 0; margin-bottom: 10px; text-align: center; }
+.instructions-list, #chatbox { flex: 1; overflow-y: auto; border: 1px solid #444; border-radius: 6px; padding: 8px; margin-bottom: 10px; }
+.instructions-list div { margin-bottom: 5px; }
+#inputArea, #instructionInputArea { display: flex; gap: 5px; }
+input, textarea { flex: 1; padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #555; background: #121212; color: #fff; }
+button { padding: 8px 12px; font-size: 14px; cursor: pointer; border-radius: 6px; border: none; background: #007bff; color: #fff; }
+.user-msg { color: #0ff; margin: 5px 0; }
+.bot-msg { color: #ff0; margin: 5px 0; }
+.bot-msg span { display: block; font-size: 12px; color: #aaa; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Instruction-based AI Chatbot</h1>
+
+<div class="container">
+  <!-- Instructions Panel -->
+  <div class="panel">
+    <h2>Instructions</h2>
+    <div class="instructions-list" id="instructionsList"></div>
+    <div id="instructionInputArea">
+      <input type="text" id="newInstruction" placeholder="Add new instruction">
+      <button id="addInstructionBtn">Add</button>
+    </div>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="panel">
+    <h2>Chat</h2>
+    <div id="chatbox"></div>
+    <div id="inputArea">
+      <input type="text" id="userInput" placeholder="Ask a question...">
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let instructions = [
+  "The AI agent works only based on the instructions provided.",
+  "It cannot answer questions outside its instructions.",
+  "It can explain data processing tasks, coding concepts, and AI model workflows.",
+  "It provides step-by-step explanations if asked.",
+  "It can generate Python code examples for data science tasks."
+];
+
+const instructionsList = document.getElementById("instructionsList");
+const chatbox = document.getElementById("chatbox");
+const userInput = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const newInstructionInput = document.getElementById("newInstruction");
+const addInstructionBtn = document.getElementById("addInstructionBtn");
+
+// Render instructions dynamically
+function renderInstructions() {
+  instructionsList.innerHTML = "";
+  instructions.forEach((inst, idx) => {
+    const div = document.createElement("div");
+    div.textContent = `${idx + 1}. ${inst}`;
+    instructionsList.appendChild(div);
+  });
+}
+
+// Keyword search to find relevant instructions
+function getRelevantInstructions(query) {
+  query = query.toLowerCase();
+  return instructions.filter(inst =>
+    inst.toLowerCase().split(" ").some(word => query.includes(word))
+  );
+}
+
+// Typing effect for bot message
+async function typeMessage(msg, sources=[]) {
+  const div = document.createElement("div");
+  div.className = "bot-msg";
+  chatbox.appendChild(div);
+
+  for (let i = 0; i < msg.length; i++) {
+    div.textContent += msg[i];
+    await new Promise(r => setTimeout(r, 20));
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  if (sources.length > 0) {
+    const span = document.createElement("span");
+    span.textContent = "Based on instruction(s): " + sources.join("; ");
+    div.appendChild(span);
+  }
+}
+
+// Add new instruction
+addInstructionBtn.onclick = () => {
+  const text = newInstructionInput.value.trim();
+  if (!text) return;
+  instructions.push(text);
+  renderInstructions();
+  newInstructionInput.value = "";
+}
+
+// Send user message
+sendBtn.onclick = async () => {
+  const q = userInput.value.trim();
+  if (!q) return;
+  const userDiv = document.createElement("div");
+  userDiv.className = "user-msg";
+  userDiv.textContent = q;
+  chatbox.appendChild(userDiv);
+  chatbox.scrollTop = chatbox.scrollHeight;
+
+  const relevant = getRelevantInstructions(q);
+  let ans, sources;
+  if (relevant.length === 0) {
+    ans = "I can only answer based on the provided instructions.";
+    sources = [];
+  } else {
+    ans = relevant.join(" ");
+    sources = relevant;
+  }
+
+  await typeMessage(ans, sources);
+  userInput.value = "";
+}
+
+// Enter key triggers send
+userInput.addEventListener("keypress", e => {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+newInstructionInput.addEventListener("keypress", e => {
+  if (e.key === "Enter") addInstructionBtn.click();
+});
+
+// Initial render
+renderInstructions();
+</script>
+
+</body>
+</html>
