@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visual AI Agent Demo - Bing Search</title>
+<title>Visual AI Agent Demo - Bing + Wikipedia</title>
 
-<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-
-<!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <style>
@@ -49,19 +46,18 @@ particlesJS("particles-js", {
   interactivity:{ events:{ onhover:{ enable:true, mode:"repulse"}}}
 });
 
-const video = document.getElementById('webcam');
-const canvas = document.getElementById('overlay');
-const ctx = canvas.getContext('2d');
-const iframe = document.getElementById('resultsFrame');
-const restartBtn = document.getElementById('restartButton');
-const explanation = document.getElementById('explanation');
+const video=document.getElementById('webcam');
+const canvas=document.getElementById('overlay');
+const ctx=canvas.getContext('2d');
+const iframe=document.getElementById('resultsFrame');
+const restartBtn=document.getElementById('restartButton');
+const explanation=document.getElementById('explanation');
 
-let camera = null;
-let detectedOnce = false;
-let pausedFrame = null;
+let camera=null;
+let detectedOnce=false;
+let pausedFrame=null;
 
-// Sample data science terms
-const dsTerms = ["Data science","Machine learning","Artificial intelligence","Deep learning",
+const dsTerms=["Data science","Machine learning","Artificial intelligence","Deep learning",
 "Neural networks","Big data","Statistics","Predictive analytics",
 "Natural language processing","Computer vision","Reinforcement learning",
 "Supervised learning","Unsupervised learning","Clustering","Regression analysis"];
@@ -69,8 +65,8 @@ const dsTerms = ["Data science","Machine learning","Artificial intelligence","De
 function getRandomTerm(){ return dsTerms[Math.floor(Math.random()*dsTerms.length)]; }
 
 // MediaPipe Face Detection
-const faceDetection = new FaceDetection({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
-faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+const faceDetection=new FaceDetection({ locateFile:(file)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
+faceDetection.setOptions({ model:'short', minDetectionConfidence:0.5 });
 
 faceDetection.onResults(results=>{
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -97,13 +93,13 @@ function startCamera(){
   detectedOnce=false;
   pausedFrame=null;
   explanation.textContent="Waiting for face detection...";
-  camera=new Camera(video,{onFrame:async()=>{await faceDetection.send({image:video});}, width:640, height:480});
+  camera=new Camera(video,{onFrame:async()=>{await faceDetection.send({image:video});}, width:640,height:480});
   camera.start();
 }
 
 function stopCamera(){ if(camera){camera.stop();camera=null;} }
 
-// Step-by-step demo with 5-second gaps
+// Step-by-step demo with 5-second gaps, final step opens first Wikipedia entry
 async function runDemoSteps(){
   const term=getRandomTerm();
 
@@ -117,7 +113,13 @@ async function runDemoSteps(){
   iframe.src=`https://www.bing.com/search?q=${encodeURIComponent(term)}+site:en.wikipedia.org`;
   await new Promise(r=>setTimeout(r,5000));
 
-  explanation.textContent=`Step 4: Search complete! You can browse results in the iframe.`;
+  explanation.textContent=`Step 4: Opening first Wikipedia entry for "${term}"...`;
+  // Directly construct the Wikipedia URL for the term
+  const wikiUrl=`https://en.wikipedia.org/wiki/${encodeURIComponent(term.replace(/ /g,'_'))}`;
+  iframe.src=wikiUrl;
+  await new Promise(r=>setTimeout(r,5000));
+
+  explanation.textContent=`Step 5: Demo complete! You can browse the Wikipedia page in the iframe.`;
 }
 
 // Restart
