@@ -38,7 +38,7 @@
     flex-wrap: wrap;
     align-items: flex-start;
   }
-  video, canvas { border: 2px solid #fff; }
+  canvas { border: 2px solid #fff; }
   iframe { width: 600px; height: 480px; border: 2px solid #ccc; background: #fff; }
   button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; color: #000; }
 </style>
@@ -50,7 +50,7 @@
 <h1>Visual AI Agent Demo</h1>
 <div class="container">
   <div>
-    <video id="webcam" autoplay playsinline width="640" height="480"></video>
+    <!-- We will only display the canvas -->
     <canvas id="overlay" width="640" height="480"></canvas>
     <br>
     <button id="restartButton">Restart Camera</button>
@@ -73,19 +73,23 @@ particlesJS("particles-js", {
   interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
 });
 
-const video = document.getElementById('webcam');
 const canvas = document.getElementById('overlay');
 const ctx = canvas.getContext('2d');
 const iframe = document.getElementById('googleFrame');
 const restartBtn = document.getElementById('restartButton');
 
 let camera = null;
-let detectedOnce = false;
+let pausedFrame = null;  // stores the paused frame
+let paused = false;
 
-// Random search term generator
-function getRandomSearchTerm() {
-    const words = ["OpenAI","ChatGPT","AI","Machine Learning","Python","Neural Networks","Data Science","Robot","Space","Technology"];
-    return words[Math.floor(Math.random() * words.length)];
+// Generate a truly random search string
+function getRandomSearchTerm(length = 8) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for(let i=0;i<length;i++) {
+        result += chars.charAt(Math.floor(Math.random()*chars.length));
+    }
+    return result;
 }
 
 // MediaPipe Face Detection
@@ -95,46 +99,63 @@ const faceDetection = new FaceDetection({
 faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
 
 faceDetection.onResults(results => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!paused) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        results.detections.forEach(detection => {
+            const box = detection.boundingBox;
+            ctx.strokeStyle = 'lime';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(box.xCenter - box.width/2, box.yCenter - box.height/2, box.width, box.height);
+        });
+    }
 
-    results.detections.forEach(detection => {
-        const box = detection.boundingBox;
-        ctx.strokeStyle = 'lime';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(box.xCenter - box.width/2, box.yCenter - box.height/2, box.width, box.height);
-    });
-
-    if (results.detections.length > 0 && !detectedOnce) {
-        detectedOnce = true;
+    if (results.detections.length > 0 && !paused) {
+        // Pause on first detection
+        paused = true;
+        pausedFrame = ctx.getImageData(0,0,canvas.width,canvas.height);
         stopCamera();
         triggerAction();
     }
 });
 
+// Hidden video element to feed MediaPipe
+const video = document.createElement('video');
+video.autoplay = true;
+video.playsInline = true;
+video.width = 640;
+video.height = 480;
+
 // Start camera
-function startCamera() {
-    detectedOnce = false;
+async function startCamera() {
+    paused = false;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+
     camera = new Camera(video, {
-        onFrame: async () => { await faceDetection.send({image: video}); },
+        onFrame: async () => {
+            if (!paused) await faceDetection.send({image: video});
+        },
         width: 640,
         height: 480
     });
     camera.start();
 }
 
-// Stop camera (pause)
+// Stop camera but keep last frame
 function stopCamera() {
     if (camera) {
         camera.stop();
         camera = null;
-        console.log("Camera paused on first detection.");
+        // Draw the paused frame
+        if (pausedFrame) ctx.putImageData(pausedFrame, 0, 0);
+        console.log("Camera paused on detected face.");
     }
 }
 
-// Trigger Google I'm Feeling Lucky with random term (light mode)
+// Trigger Google I'm Feeling Lucky with random term
 function triggerAction() {
-    const randomTerm = getRandomSearchTerm();
-    // hl=en ensures light mode, btnI=I triggers I'm Feeling Lucky
+    const randomTerm = getRandomSearchTerm(10);
     iframe.src = `https://www.google.com/search?q=${encodeURIComponent(randomTerm)}&btnI=I&hl=en&safe=off`;
     console.log(`Face detected! Searching for: ${randomTerm}`);
 }
@@ -147,7 +168,6 @@ restartBtn.addEventListener('click', () => {
 
 // Start camera on page load
 startCamera();
-
 </script>
 </body>
 </html>
