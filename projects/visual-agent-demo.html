@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visual AI Agent Demo - Step Demo</title>
+<title>Visual AI Agent Demo - Bing Search</title>
 
 <!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
@@ -39,28 +39,20 @@ button { padding:10px 20px; font-size:16px; margin-top:20px; cursor:pointer; col
     </div>
     <button id="restartButton">Restart Camera</button>
   </div>
-  <iframe id="wikiFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+  <iframe id="resultsFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
 
 <script>
 // Particles.js
 particlesJS("particles-js", {
-  particles: {
-    number: { value: 80 },
-    color: { value: "#ffffff" },
-    shape: { type: "circle" },
-    opacity: { value: 0.5 },
-    size: { value: 3 },
-    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
-    move: { enable: true, speed: 2 }
-  },
-  interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
+  particles: { number:{value:80}, color:{value:"#fff"}, shape:{type:"circle"}, opacity:{value:0.5}, size:{value:3}, line_linked:{enable:true,distance:150,color:"#fff",opacity:0.4,width:1}, move:{enable:true,speed:2}},
+  interactivity:{ events:{ onhover:{ enable:true, mode:"repulse"}}}
 });
 
 const video = document.getElementById('webcam');
 const canvas = document.getElementById('overlay');
 const ctx = canvas.getContext('2d');
-const iframe = document.getElementById('wikiFrame');
+const iframe = document.getElementById('resultsFrame');
 const restartBtn = document.getElementById('restartButton');
 const explanation = document.getElementById('explanation');
 
@@ -68,38 +60,32 @@ let camera = null;
 let detectedOnce = false;
 let pausedFrame = null;
 
-// Data science terms
-const dsTerms = [
-  "Data science","Machine learning","Artificial intelligence","Deep learning",
-  "Neural networks","Big data","Statistics","Predictive analytics",
-  "Natural language processing","Computer vision","Reinforcement learning",
-  "Supervised learning","Unsupervised learning","Clustering","Regression analysis"
-];
+// Sample data science terms
+const dsTerms = ["Data science","Machine learning","Artificial intelligence","Deep learning",
+"Neural networks","Big data","Statistics","Predictive analytics",
+"Natural language processing","Computer vision","Reinforcement learning",
+"Supervised learning","Unsupervised learning","Clustering","Regression analysis"];
 
-function getRandomTerm() {
-  return dsTerms[Math.floor(Math.random() * dsTerms.length)];
-}
+function getRandomTerm(){ return dsTerms[Math.floor(Math.random()*dsTerms.length)]; }
 
 // MediaPipe Face Detection
-const faceDetection = new FaceDetection({
-  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
-});
+const faceDetection = new FaceDetection({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`});
 faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
 
-faceDetection.onResults(results => {
+faceDetection.onResults(results=>{
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
 
-  results.detections.forEach(d => {
-    const box = d.boundingBox;
-    ctx.strokeStyle = 'lime';
-    ctx.lineWidth = 3;
+  results.detections.forEach(d=>{
+    const box=d.boundingBox;
+    ctx.strokeStyle='lime';
+    ctx.lineWidth=3;
     ctx.strokeRect(box.xCenter-box.width/2, box.yCenter-box.height/2, box.width, box.height);
   });
 
-  if(results.detections.length > 0 && !detectedOnce){
-    detectedOnce = true;
-    pausedFrame = ctx.getImageData(0,0,canvas.width,canvas.height);
+  if(results.detections.length>0 && !detectedOnce){
+    detectedOnce=true;
+    pausedFrame=ctx.getImageData(0,0,canvas.width,canvas.height);
     stopCamera();
     runDemoSteps();
   } else if(pausedFrame){
@@ -107,54 +93,34 @@ faceDetection.onResults(results => {
   }
 });
 
-function startCamera() {
-  detectedOnce = false;
-  pausedFrame = null;
-  explanation.textContent = "Waiting for face detection...";
-  camera = new Camera(video, {
-    onFrame: async () => { await faceDetection.send({image: video}); },
-    width: 640,
-    height: 480
-  });
+function startCamera(){
+  detectedOnce=false;
+  pausedFrame=null;
+  explanation.textContent="Waiting for face detection...";
+  camera=new Camera(video,{onFrame:async()=>{await faceDetection.send({image:video});}, width:640, height:480});
   camera.start();
 }
 
-function stopCamera() {
-  if(camera){ camera.stop(); camera=null; }
-}
+function stopCamera(){ if(camera){camera.stop();camera=null;} }
 
 // Step-by-step demo with 5-second gaps
-async function runDemoSteps() {
-  const term = getRandomTerm();
+async function runDemoSteps(){
+  const term=getRandomTerm();
 
-  explanation.textContent = `Step 1: Face detected. Pausing camera...`;
+  explanation.textContent=`Step 1: Face detected. Pausing camera...`;
   await new Promise(r=>setTimeout(r,5000));
 
-  explanation.textContent = `Step 2: Preparing Google search for "${term}"...`;
+  explanation.textContent=`Step 2: Preparing Bing search for "${term}"...`;
   await new Promise(r=>setTimeout(r,5000));
 
-  explanation.textContent = `Step 3: Performing Google search...`;
-  // Only search, no "I'm Feeling Lucky"
-  iframe.src = `https://www.google.com/search?q=${encodeURIComponent(term)}+site:en.wikipedia.org`;
+  explanation.textContent=`Step 3: Performing Bing search...`;
+  iframe.src=`https://www.bing.com/search?q=${encodeURIComponent(term)}+site:en.wikipedia.org`;
   await new Promise(r=>setTimeout(r,5000));
 
-  explanation.textContent = `Step 4: Search complete! You can browse results in the iframe.`;
+  explanation.textContent=`Step 4: Search complete! You can browse results in the iframe.`;
 }
 
-// Force light mode once iframe loads (Wikipedia or search)
-iframe.addEventListener("load", ()=>{
-  try{
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    if(doc){
-      const style = doc.createElement("style");
-      style.innerHTML = `
-        body { background:#fff !important; color:#000 !important; }
-      `;
-      doc.head.appendChild(style);
-    }
-  } catch(e){ console.log("Cross-origin: cannot inject style."); }
-});
-
+// Restart
 restartBtn.addEventListener('click', startCamera);
 startCamera();
 </script>
