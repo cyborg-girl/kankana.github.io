@@ -42,6 +42,7 @@
 
     #status {
       margin-top: 20px;
+      font-style: italic;
     }
 
     #particles-js {
@@ -51,15 +52,6 @@
       z-index: -1;
       top: 0;
       left: 0;
-    }
-
-    iframe {
-      margin-top: 30px;
-      border: 1px solid #444;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 900px;
-      height: 700px;
     }
   </style>
 
@@ -73,14 +65,11 @@
   <h1>AI Visual Agent - Text-to-Image Demo</h1>
 
   <div>
-    <input type="text" id="prompt" placeholder="Enter a prompt (optional)">
-    <button onclick="focusIframe()">Generate Image</button>
+    <input type="text" id="prompt" placeholder="Enter your prompt">
+    <button onclick="openAIPage()">Generate Image</button>
   </div>
 
-  <div id="status">Click "Generate Image" to use the AI demo below.</div>
-
-  <!-- Hugging Face Space iframe -->
-  <iframe id="ai-space" src="https://huggingface.co/spaces/stabilityai/stable-diffusion" allow="fullscreen"></iframe>
+  <div id="status">Click "Generate Image" to open the AI demo in a new tab.</div>
 
   <script>
     // Particles.js configuration
@@ -94,11 +83,17 @@
       }
     });
 
-    function focusIframe() {
-      // Just scroll to iframe for UX
-      const iframe = document.getElementById('ai-space');
-      iframe.scrollIntoView({ behavior: 'smooth' });
-      document.getElementById('status').innerText = 'Interact with the AI below to generate images.';
+    function openAIPage() {
+      const prompt = document.getElementById('prompt').value.trim();
+      let url = 'https://huggingface.co/spaces/stabilityai/stable-diffusion';
+      
+      // If user typed a prompt, append it as query (some Spaces support ?prompt=)
+      if(prompt) {
+        url += `?__theme=dark&prompt=${encodeURIComponent(prompt)}`;
+      }
+
+      window.open(url, '_blank');
+      document.getElementById('status').innerText = 'AI demo opened in a new tab!';
     }
   </script>
 
