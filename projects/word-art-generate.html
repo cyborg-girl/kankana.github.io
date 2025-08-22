@@ -1,58 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Visual Agent - Text-to-Image Demo</title>
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ml5@2.3.0/dist/ml5.min.js"></script>
-  <style>
-    body { background: #111; color: #eee; font-family: sans-serif; text-align: center; }
-    canvas { margin-top: 10px; border: 2px solid #333; }
-    input, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
-    button { cursor: pointer; background: #444; color: white; }
-    button:hover { background: #666; }
-  </style>
+<meta charset="UTF-8">
+<title>AI Visual Agent - Text-to-Image Demo</title>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+<style>
+body { background: #111; color: #eee; font-family: sans-serif; text-align: center; }
+canvas { margin-top: 10px; border: 2px solid #333; }
+input, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
+button { cursor: pointer; background: #444; color: white; }
+button:hover { background: #666; }
+#loading { margin-top: 10px; color: #ff0; }
+</style>
 </head>
 <body>
-  <h1>🎨 AI Visual Agent - Text-to-Image Demo</h1>
-  <input id="prompt" placeholder="Type a prompt (e.g., 'bear in a spaceship')">
-  <button onclick="generateImage()">Generate Image</button>
-  <button onclick="saveCanvas('drawing','png')">Save PNG</button>
-  <div id="output"></div>
+<h1>🎨 AI Visual Agent - Text-to-Image Demo</h1>
+<input id="prompt" placeholder="Type a prompt (e.g., 'bear in a spaceship')">
+<button onclick="generateImage()">Generate Image</button>
+<button onclick="saveCanvas('drawing','png')">Save PNG</button>
+<div id="loading"></div>
+<div id="output"></div>
 
-  <script>
-    let model;
-    let img;
+<script>
+let canvas;
+let generatedImg;
 
-    function setup() {
-      createCanvas(600, 400);
-      model = ml5.imageGenerator('StableDiffusion', modelReady);
-    }
+function setup() {
+  canvas = createCanvas(600, 400);
+  canvas.parent(document.body);
+  background("#222");
+}
 
-    function modelReady() {
-      console.log('Model Loaded!');
-    }
+async function generateImage() {
+  const prompt = document.getElementById('prompt').value;
+  const loadingDiv = document.getElementById('loading');
+  loadingDiv.innerText = "Generating image, please wait...";
+  
+  if(!prompt) {
+    alert("Please enter a prompt!");
+    loadingDiv.innerText = "";
+    return;
+  }
 
-    function generateImage() {
-      const prompt = document.getElementById('prompt').value;
-      if (prompt) {
-        model.generate(prompt, gotResult);
-      } else {
-        alert('Please enter a prompt!');
-      }
-    }
+  // HuggingFace Inference API URL
+  const API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2";
+  const API_TOKEN = "YOUR_HUGGINGFACE_API_KEY"; // replace with your key
 
-    function gotResult(err, results) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      if (results && results[0]) {
-        img = createImg(results[0].src, '');
-        img.hide();
-        image(img, 0, 0, width, height);
-      }
-    }
-  </script>
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ inputs: prompt })
+    });
+
+    if(!response.ok) throw new Error("API error");
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    // Display image on canvas
+    generatedImg = createImg(url, '', '', ()=>{ 
+      generatedImg.hide(); 
+      image(generatedImg,0,0,width,height); 
+      loadingDiv.innerText = ""; 
+    });
+  } catch(e) {
+    console.error(e);
+    loadingDiv.innerText = "API unavailable. Showing fallback abstract art.";
+    fallbackArt();
+  }
+}
+
+// Painterly fallback abstract art
+function fallbackArt() {
+  background("#222");
+  for(let i=0;i<200;i++){
+    noStroke();
+    fill(random(255),random(255),random(255),100);
+    ellipse(random(width),random(height),random(20,80));
+  }
+}
+</script>
 </body>
 </html>
