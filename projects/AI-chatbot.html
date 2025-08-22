@@ -3,25 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Instruction-Based Custom AI Chatbot | Portfolio Demo</title>
+<title>Instruction-Based Custom AI Agent | Portfolio Demo</title>
 
-<!-- CVless Dark Theme-like Styles -->
+<!-- CVless Dark Theme Styles -->
 <style>
 :root {
   --bg: #0d0d0d;
-  --card: rgba(29, 53, 87, 0.85);
+  --card: rgba(29,53,87,0.85);
   --accent: #4cc9f0;
   --muted: #bfc9d9;
   --highlight: #ffd166;
 }
 
 body {
-  margin: 0;
-  padding: 0;
+  margin:0; padding:0;
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: #fff;
-  overflow-x: hidden;
+  overflow-x:hidden;
 }
 
 #particles-js {
@@ -31,26 +30,33 @@ body {
 }
 
 .container {
-  max-width: 900px;
-  margin: 80px auto 40px auto;
-  background: var(--card);
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  display: flex;
+  gap: 30px;
+  max-width: 1000px;
+  margin: 80px auto;
+  padding: 20px;
   animation: fadeIn 1s ease-out;
 }
 
-h1 {
-  text-align: center;
+.instructions-column, .chat-column {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-height: 700px;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+
+.instructions-column h2, .chat-column h2 {
   color: var(--accent);
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
-.instructions, .chatbox-container {
-  margin-top: 20px;
-}
-
-.instructions div {
+.instructions-list div {
   background: rgba(255,255,255,0.05);
   padding: 10px 14px;
   margin-bottom: 8px;
@@ -59,19 +65,51 @@ h1 {
   transition: transform 0.2s ease, background 0.3s ease;
 }
 
-.instructions div.flash {
+.instructions-list div.flash {
   background: var(--highlight);
   color: #000;
   transform: scale(1.05);
 }
 
-.chatbox-container {
-  background: rgba(0,0,0,0.12);
-  padding: 15px;
-  border-radius: 12px;
-  max-height: 350px;
+.add-instruction {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.add-instruction input {
+  flex:1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  margin-right: 8px;
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.add-instruction button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #0b1020;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chatbox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.chat-messages {
+  flex: 1;
   overflow-y: auto;
-  margin-bottom: 20px;
+  background: rgba(0,0,0,0.12);
+  padding: 12px;
+  border-radius: 12px;
 }
 
 .bot-msg, .user-msg {
@@ -114,7 +152,7 @@ input[type="text"] {
   color: #f1f1f1;
 }
 
-button {
+button.send-btn {
   padding: 10px 16px;
   border-radius: 10px;
   border: none;
@@ -125,13 +163,9 @@ button {
   transition: transform 0.2s ease, background 0.3s ease;
 }
 
-button:hover {
+button.send-btn:hover {
   transform: scale(1.05);
   background: #4895ef;
-}
-
-input:focus, button:focus {
-  outline: none;
 }
 
 @keyframes fadeIn {
@@ -150,20 +184,29 @@ input:focus, button:focus {
 <div id="particles-js"></div>
 
 <div class="container">
-  <h1>Instruction-Based AI Agent</h1>
-  
-  <div class="instructions" id="instructionsList">
-    <!-- Instructions will render here -->
+
+  <!-- Instructions Column -->
+  <div class="instructions-column">
+    <h2>Custom Instructions</h2>
+    <div class="add-instruction">
+      <input type="text" id="newInstruction" placeholder="Add new instruction...">
+      <button id="addInstructionBtn">Add</button>
+    </div>
+    <div class="instructions-list" id="instructionsList"></div>
   </div>
-  
-  <div class="chatbox-container" id="chatbox">
-    <!-- Chat messages appear here -->
+
+  <!-- Chat Column -->
+  <div class="chat-column">
+    <h2>Chat with AI Agent</h2>
+    <div class="chatbox">
+      <div class="chat-messages" id="chatbox"></div>
+      <div style="display:flex; margin-top:8px;">
+        <input type="text" id="userInput" placeholder="Type your question..." />
+        <button class="send-btn" id="sendBtn">Send</button>
+      </div>
+    </div>
   </div>
-  
-  <div style="display:flex; margin-top:10px;">
-    <input type="text" id="userInput" placeholder="Type your question..." />
-    <button id="sendBtn">Send</button>
-  </div>
+
 </div>
 
 <!-- Particles.js -->
@@ -182,7 +225,7 @@ particlesJS("particles-js", {
 </script>
 
 <script>
-// Your JavaScript logic adapted
+// Base instructions
 let instructions = [
   "The AI agent works only based on the instructions provided.",
   "It cannot answer questions outside its instructions."
@@ -193,6 +236,9 @@ const chatbox = document.getElementById("chatbox");
 const userInput = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 
+const newInstructionInput = document.getElementById("newInstruction");
+const addInstructionBtn = document.getElementById("addInstructionBtn");
+
 // Render instructions
 function renderInstructions() {
   instructionsList.innerHTML = "";
@@ -202,6 +248,16 @@ function renderInstructions() {
     div.dataset.index = idx;
     instructionsList.appendChild(div);
   });
+}
+
+// Add new instruction
+addInstructionBtn.onclick = () => {
+  const val = newInstructionInput.value.trim();
+  if(val) {
+    instructions.push(val);
+    newInstructionInput.value = "";
+    renderInstructions();
+  }
 }
 
 // Simple scoring function
