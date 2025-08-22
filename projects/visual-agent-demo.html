@@ -3,59 +3,163 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visual AI Agent</title>
-
-<!-- Jekyll CVless Dark theme CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/cckanishka/cvless-dark/cvless-dark.css">
-
-<!-- MediaPipe -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<title>Visual AI Agent Demo | CVless Theme</title>
 
 <!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+<!-- MediaPipe Face Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
 <style>
-/* Container adjustments for CVless dark theme */
-.container { display:flex; justify-content:center; align-items:flex-start; gap:40px; margin-top:30px; flex-wrap:wrap; }
-#cameraBox { display:flex; flex-direction:column; align-items:center; }
-#cameraWrapper { position:relative; width:640px; height:480px; }
-#webcam { width:640px; height:480px; border:2px solid #fff; }
-canvas { position:absolute; top:0; left:0; width:640px; height:480px; border:2px solid lime; }
-iframe { width:600px; height:480px; border:2px solid #ccc; background:#fff; }
-button { padding:10px 20px; font-size:16px; margin-top:20px; cursor:pointer; color:#000; }
-#explanation { font-size:18px; margin-top:15px; color:#ff0; }
+/* CVless Dark Theme */
+:root {
+  --bg:#0d1117;
+  --card:#161b22;
+  --accent:#4cc9f0;
+  --muted:#8b949e;
+}
+
+body {
+  margin:0;
+  padding:0;
+  font-family:'Inter', sans-serif;
+  background: var(--bg);
+  color:#e6edf3;
+  overflow-x:hidden;
+}
+
+#particles-js {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  z-index:-1;
+}
+
+h1 {
+  text-align:center;
+  margin-top:30px;
+  font-size:2rem;
+  color:var(--accent);
+  animation: fadeInDown 1s ease-out;
+}
+
+#explanation {
+  text-align:center;
+  color:var(--muted);
+  font-size:1.1rem;
+  margin-top:10px;
+  animation: fadeIn 1.2s ease-out;
+}
+
+.container {
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:40px;
+  flex-wrap:wrap;
+  padding:30px 20px;
+  animation: fadeInUp 1.4s ease-out;
+}
+
+.card {
+  background: var(--card);
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+#cameraWrapper {
+  position:relative;
+  width:640px;
+  height:480px;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+video#webcam {
+  width:640px;
+  height:480px;
+  border-radius:12px;
+}
+
+canvas {
+  position:absolute;
+  top:0; left:0;
+  width:640px;
+  height:480px;
+  border-radius:12px;
+}
+
+iframe {
+  width:600px;
+  height:480px;
+  border-radius:12px;
+  border:2px solid var(--muted);
+  background:#fff;
+}
+
+button {
+  margin-top:15px;
+  padding:12px 24px;
+  font-size:16px;
+  font-weight:700;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),#1f6feb);
+  color:#fff;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+button:hover {
+  transform: scale(1.05);
+  box-shadow:0 0 20px rgba(76,202,240,0.6);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity:0; transform:translateY(-20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity:0; } to { opacity:1; }
+}
 </style>
 </head>
-<body class="dark">
 
+<body>
 <div id="particles-js"></div>
 
-<section class="section">
-  <div class="container">
-    <div>
-      <h1 class="title">Visual AI Agent Demo - Step-by-Step</h1>
-      <p id="explanation">Waiting for face detection...</p>
-    </div>
-  </div>
-</section>
+<h1>Visual AI Agent Demo</h1>
+<div id="explanation">Waiting for face detection...</div>
 
 <div class="container">
-  <div id="cameraBox">
+  <div class="card">
     <div id="cameraWrapper">
       <video id="webcam" autoplay playsinline></video>
       <canvas id="overlay" width="640" height="480"></canvas>
     </div>
-    <button id="restartButton" class="button is-primary">Restart Camera</button>
+    <button id="restartButton">Restart Camera</button>
   </div>
-  <iframe id="resultsFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+
+  <div class="card">
+    <iframe id="resultsFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+  </div>
 </div>
 
 <script>
 // Particles.js
 particlesJS("particles-js", {
-  particles: { number:{value:80}, color:{value:"#fff"}, shape:{type:"circle"}, opacity:{value:0.5}, size:{value:3}, line_linked:{enable:true,distance:150,color:"#fff",opacity:0.4,width:1}, move:{enable:true,speed:2}},
-  interactivity:{ events:{ onhover:{ enable:true, mode:"repulse"}}}
+  particles: { number:{value:70}, color:{value:"#4cc9f0"}, shape:{type:"circle"}, size:{value:3}, line_linked:{enable:true,distance:140,color:"#4cc9f0"}, move:{enable:true,speed:1} },
+  interactivity:{ events:{ onhover:{ enable:true, mode:"repulse" } } }
 });
 
 const video=document.getElementById('webcam');
@@ -111,10 +215,8 @@ function startCamera(){
 
 function stopCamera(){ if(camera){camera.stop();camera=null;} }
 
-// Step-by-step demo with 5-second gaps, final step opens first Wikipedia entry
 async function runDemoSteps(){
   const term=getRandomTerm();
-
   explanation.textContent=`Step 1: Face detected. Pausing camera...`;
   await new Promise(r=>setTimeout(r,5000));
 
