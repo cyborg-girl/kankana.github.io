@@ -34,6 +34,14 @@ permalink: /projects/
 </div>
 
 
+<div class="project-card fade-in-up">
+  <h2>📝 Instruction-based Custom AI Chatbot</h2>
+  <p>
+    Showcases an instruction-based AI agent that answers questions strictly according to custom instructions provided by the user. 
+  </p>
+  <a href="/home/projects/visual-agent-demo.html" class="btn">🔍 Try it Live</a>
+</div>
+
 
 <!-- You can add more projects in this format -->
 <!-- ## 🎨 Coming Soon -->
