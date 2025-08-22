@@ -9,7 +9,7 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       background: #121212;
       color: #ffffff;
       text-align: center;
@@ -40,10 +40,7 @@
 
     button:hover { background-color: #e91e63; }
 
-    #status {
-      margin-top: 20px;
-      font-style: italic;
-    }
+    #status { margin-top: 20px; font-style: italic; }
 
     #output img {
       margin: 20px 10px;
@@ -64,8 +61,6 @@
 
   <!-- Particles.js library -->
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <!-- Transformers WASM library -->
-  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js"></script>
 </head>
 <body>
 
@@ -78,7 +73,7 @@
     <button onclick="generateImage()">Generate Image</button>
   </div>
 
-  <div id="status">Loading model... please wait (may take 30-60 seconds first time)</div>
+  <div id="status">Enter a prompt and click "Generate Image".</div>
   <div id="output"></div>
 
   <script>
@@ -93,40 +88,51 @@
       }
     });
 
-    let model;
-
-    async function loadModel() {
-      document.getElementById('status').innerText = 'Loading AI model... (may take 30-60s)';
-      // Load a lightweight Stable Diffusion model in-browser
-      model = await window.transformers.pipeline(
-        'text-to-image',
-        'Xenova/stable-diffusion-mini' // lightweight browser-friendly model
-      );
-      document.getElementById('status').innerText = 'Model loaded! Enter a prompt and generate an image.';
-    }
-
     async function generateImage() {
       const prompt = document.getElementById('prompt').value.trim();
       if (!prompt) return alert('Please enter a prompt');
-      if (!model) return alert('Model is still loading');
 
-      document.getElementById('status').innerText = 'Generating image... this may take a few seconds';
-      
+      document.getElementById('status').innerText = 'Generating image...';
+
       try {
-        const output = await model(prompt, { height: 512, width: 512 });
-        const imgUrl = output[0].image;
+        // Call Replicate's free text-to-image demo model
+        const response = await fetch('https://api.replicate.com/v1/predictions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // You can optionally use a free public token for testing
+            'Authorization': 'Token YOUR_REPLICATE_API_TOKEN_HERE'
+          },
+          body: JSON.stringify({
+            version: "7df78c2a90bf3d9c93311b74668f27e2b0e1c51d0567b9932f18ec0dbfa5e9e1", 
+            input: { prompt: prompt }
+          })
+        });
 
-        const outputDiv = document.getElementById('output');
-        outputDiv.innerHTML = `<img src="${imgUrl}" alt="Generated Image">`;
+        const data = await response.json();
+        // Poll the prediction until completed
+        let resultUrl = '';
+        while (true) {
+          const predResponse = await fetch(`https://api.replicate.com/v1/predictions/${data.id}`, {
+            headers: { 'Authorization': 'Token YOUR_REPLICATE_API_TOKEN_HERE' }
+          });
+          const predData = await predResponse.json();
+          if (predData.status === 'succeeded') {
+            resultUrl = predData.output[0];
+            break;
+          } else if (predData.status === 'failed') {
+            throw new Error('Image generation failed');
+          }
+          await new Promise(r => setTimeout(r, 1000));
+        }
 
-        document.getElementById('status').innerText = 'Done!';
-      } catch (e) {
-        console.error(e);
+        document.getElementById('output').innerHTML = `<img src="${resultUrl}" alt="Generated Image">`;
+        document.getElementById('status').innerText = 'Image generated!';
+      } catch (err) {
+        console.error(err);
         document.getElementById('status').innerText = 'Error generating image. Check console.';
       }
     }
-
-    loadModel();
   </script>
 
 </body>
