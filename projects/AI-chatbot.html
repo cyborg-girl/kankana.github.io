@@ -3,71 +3,197 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Instruction-based AI Chatbot</title>
+<title>Instruction-Based Custom AI Chatbot | Portfolio Demo</title>
 
-<!-- CVless Dark Theme -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/cckanishka/cvless-dark/cvless-dark.css">
-
+<!-- CVless Dark Theme-like Styles -->
 <style>
-body { font-family: sans-serif; margin: 0; background: #121212; color: #fff; display: flex; flex-direction: column; padding: 20px; }
-h1 { text-align: center; margin-bottom: 20px; }
-.container { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
-.panel { background: #1a1a1a; padding: 15px; border-radius: 10px; width: 400px; max-height: 600px; display: flex; flex-direction: column; }
-.panel h2 { margin-top: 0; margin-bottom: 10px; text-align: center; }
-.instructions-list, #chatbox { flex: 1; overflow-y: auto; border: 1px solid #444; border-radius: 6px; padding: 8px; margin-bottom: 10px; }
-.instructions-list div { margin-bottom: 5px; transition: background 0.3s ease; padding: 2px 4px; border-radius: 4px; }
-#inputArea, #instructionInputArea { display: flex; gap: 5px; }
-input, textarea { flex: 1; padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #555; background: #121212; color: #fff; }
-button { padding: 8px 12px; font-size: 14px; cursor: pointer; border-radius: 6px; border: none; background: #007bff; color: #fff; }
-.user-msg { color: #0ff; margin: 5px 0; }
-.bot-msg { color: #ff0; margin: 5px 0; }
-.bot-msg span { display: block; font-size: 12px; color: #aaa; margin-top: 2px; }
-.flash { background: #444 !important; }
+:root {
+  --bg: #0d0d0d;
+  --card: rgba(29, 53, 87, 0.85);
+  --accent: #4cc9f0;
+  --muted: #bfc9d9;
+  --highlight: #ffd166;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: #fff;
+  overflow-x: hidden;
+}
+
+#particles-js {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.container {
+  max-width: 900px;
+  margin: 80px auto 40px auto;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  animation: fadeIn 1s ease-out;
+}
+
+h1 {
+  text-align: center;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.instructions, .chatbox-container {
+  margin-top: 20px;
+}
+
+.instructions div {
+  background: rgba(255,255,255,0.05);
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  cursor: default;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.instructions div.flash {
+  background: var(--highlight);
+  color: #000;
+  transform: scale(1.05);
+}
+
+.chatbox-container {
+  background: rgba(0,0,0,0.12);
+  padding: 15px;
+  border-radius: 12px;
+  max-height: 350px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.bot-msg, .user-msg {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 80%;
+  line-height: 1.4;
+  animation: fadeInUp 0.6s ease;
+}
+
+.user-msg {
+  background: var(--accent);
+  color: #0b1020;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.bot-msg {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  align-self: flex-start;
+}
+
+.bot-msg span {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+input[type="text"] {
+  width: calc(100% - 90px);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  margin-right: 8px;
+  font-size: 16px;
+  background: #1a1a1a;
+  color: #f1f1f1;
+}
+
+button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #0b1020;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+  background: #4895ef;
+}
+
+input:focus, button:focus {
+  outline: none;
+}
+
+@keyframes fadeIn {
+  from {opacity:0;}
+  to {opacity:1;}
+}
+
+@keyframes fadeInUp {
+  from {opacity:0; transform: translateY(10px);}
+  to {opacity:1; transform: translateY(0);}
+}
 </style>
 </head>
 <body>
 
-<h1>Instruction-based AI Chatbot</h1>
+<div id="particles-js"></div>
 
 <div class="container">
-  <!-- Instructions Panel -->
-  <div class="panel">
-    <h2>Instructions</h2>
-    <div class="instructions-list" id="instructionsList"></div>
-    <div id="instructionInputArea">
-      <input type="text" id="newInstruction" placeholder="Add new instruction">
-      <button id="addInstructionBtn">Add</button>
-    </div>
+  <h1>Instruction-Based AI Agent</h1>
+  
+  <div class="instructions" id="instructionsList">
+    <!-- Instructions will render here -->
   </div>
-
-  <!-- Chat Panel -->
-  <div class="panel">
-    <h2>Chat</h2>
-    <div id="chatbox"></div>
-    <div id="inputArea">
-      <input type="text" id="userInput" placeholder="Ask a question...">
-      <button id="sendBtn">Send</button>
-    </div>
+  
+  <div class="chatbox-container" id="chatbox">
+    <!-- Chat messages appear here -->
+  </div>
+  
+  <div style="display:flex; margin-top:10px;">
+    <input type="text" id="userInput" placeholder="Type your question..." />
+    <button id="sendBtn">Send</button>
   </div>
 </div>
 
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
+particlesJS("particles-js", {
+  particles: {
+    number:{value:70},
+    size:{value:3},
+    color:{value:"#4cc9f0"},
+    move:{speed:1},
+    line_linked:{enable:true, distance:140, color:"#4cc9f0"}
+  },
+  interactivity: { events:{ onhover:{ enable:true, mode:"repulse" }}}
+});
+</script>
+
+<script>
+// Your JavaScript logic adapted
 let instructions = [
   "The AI agent works only based on the instructions provided.",
-  "It cannot answer questions outside its instructions.",
-  "It can explain data processing tasks, coding concepts, and AI model workflows.",
-  "It provides step-by-step explanations if asked.",
-  "It can generate Python code examples for data science tasks."
+  "It cannot answer questions outside its instructions."
 ];
 
 const instructionsList = document.getElementById("instructionsList");
 const chatbox = document.getElementById("chatbox");
 const userInput = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
-const newInstructionInput = document.getElementById("newInstruction");
-const addInstructionBtn = document.getElementById("addInstructionBtn");
 
-// Render instructions dynamically
+// Render instructions
 function renderInstructions() {
   instructionsList.innerHTML = "";
   instructions.forEach((inst, idx) => {
@@ -78,93 +204,76 @@ function renderInstructions() {
   });
 }
 
-// Highlight relevant instructions briefly
+// Simple scoring function
+function scoreMatch(query, instruction) {
+  const qWords = query.toLowerCase().split(/\W+/);
+  const iWords = instruction.toLowerCase().split(/\W+/);
+  return iWords.filter(w => qWords.includes(w)).length;
+}
+
+// Get best matching instructions
+function getRelevantInstructions(query) {
+  let scored = instructions.map((inst, idx) => ({ inst, idx, score: scoreMatch(query, inst) }));
+  scored.sort((a,b)=>b.score-a.score);
+  if(scored[0].score === 0) return [];
+  return [scored[0]];
+}
+
+// Flash highlight
 function flashInstructions(indices) {
   indices.forEach(i => {
     const div = instructionsList.querySelector(`div[data-index="${i}"]`);
     if (div) {
       div.classList.add("flash");
-      setTimeout(() => div.classList.remove("flash"), 600);
+      setTimeout(()=>div.classList.remove("flash"),600);
     }
   });
 }
 
-// Keyword search to find relevant instructions
-function getRelevantInstructions(query) {
-  query = query.toLowerCase();
-  const matched = instructions.map((inst, idx) => ({ inst, idx }))
-    .filter(({ inst }) => inst.toLowerCase().split(" ").some(word => query.includes(word)));
-  return matched;
-}
-
-// Typing effect for bot message
+// Typing effect
 async function typeMessage(msg, sources=[]) {
   const div = document.createElement("div");
   div.className = "bot-msg";
   chatbox.appendChild(div);
-
-  for (let i = 0; i < msg.length; i++) {
-    div.textContent += msg[i];
-    await new Promise(r => setTimeout(r, 20));
+  for(let i=0;i<msg.length;i++){
+    div.textContent+=msg[i];
+    await new Promise(r=>setTimeout(r,20));
     chatbox.scrollTop = chatbox.scrollHeight;
   }
-
-  if (sources.length > 0) {
-    const span = document.createElement("span");
-    span.textContent = "Based on instruction(s): " + sources.map(s=>s.inst).join("; ");
+  if(sources.length>0){
+    const span=document.createElement("span");
+    span.textContent="Based on instruction(s): "+sources.map(s=>s.inst).join("; ");
     div.appendChild(span);
   }
 }
 
-// Add new instruction
-addInstructionBtn.onclick = () => {
-  const text = newInstructionInput.value.trim();
-  if (!text) return;
-  instructions.push(text);
-  renderInstructions();
-  newInstructionInput.value = "";
-}
-
-// Send user message
+// Send message
 sendBtn.onclick = async () => {
   const q = userInput.value.trim();
-  if (!q) return;
-
-  // Show user message
-  const userDiv = document.createElement("div");
-  userDiv.className = "user-msg";
-  userDiv.textContent = q;
+  if(!q) return;
+  const userDiv=document.createElement("div");
+  userDiv.className="user-msg";
+  userDiv.textContent=q;
   chatbox.appendChild(userDiv);
-  chatbox.scrollTop = chatbox.scrollHeight;
+  chatbox.scrollTop=chatbox.scrollHeight;
 
-  // Find relevant instructions
-  const relevant = getRelevantInstructions(q);
-  let ans, sources;
-  if (relevant.length === 0) {
-    ans = "I'm sorry, this question is outside the scope of the AI agent based on its instructions.";
-    sources = [];
+  const relevant=getRelevantInstructions(q);
+  let ans,sources;
+  if(relevant.length===0){
+    ans="I'm sorry, this question is outside the scope of the AI agent based on its instructions.";
+    sources=[];
   } else {
-    ans = relevant.map(r => r.inst).join(" ");
-    sources = relevant;
-    flashInstructions(relevant.map(r => r.idx));
+    ans=relevant.map(r=>r.inst).join(" ");
+    sources=relevant;
+    flashInstructions(relevant.map(r=>r.idx));
   }
-
-  await typeMessage(ans, sources);
-  userInput.value = "";
+  await typeMessage(ans,sources);
+  userInput.value="";
 }
 
-// Enter key triggers send
-userInput.addEventListener("keypress", e => {
-  if (e.key === "Enter") sendBtn.click();
-});
+userInput.addEventListener("keypress", e=>{if(e.key==="Enter") sendBtn.click();});
 
-newInstructionInput.addEventListener("keypress", e => {
-  if (e.key === "Enter") addInstructionBtn.click();
-});
-
-// Initial render
 renderInstructions();
 </script>
-
 </body>
 </html>
