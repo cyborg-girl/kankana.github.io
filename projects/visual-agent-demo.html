@@ -3,15 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visual AI Agent Demo - Bing + Wikipedia</title>
+<title>Visual AI Agent</title>
 
+<!-- Jekyll CVless Dark theme CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/cckanishka/cvless-dark/cvless-dark.css">
+
+<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 
 <style>
-body { font-family: sans-serif; margin:0; background:#121212; color:#fff; text-align:center; overflow-x:hidden; }
-#particles-js { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; }
+/* Container adjustments for CVless dark theme */
 .container { display:flex; justify-content:center; align-items:flex-start; gap:40px; margin-top:30px; flex-wrap:wrap; }
 #cameraBox { display:flex; flex-direction:column; align-items:center; }
 #cameraWrapper { position:relative; width:640px; height:480px; }
@@ -22,19 +27,26 @@ button { padding:10px 20px; font-size:16px; margin-top:20px; cursor:pointer; col
 #explanation { font-size:18px; margin-top:15px; color:#ff0; }
 </style>
 </head>
-<body>
+<body class="dark">
 
 <div id="particles-js"></div>
 
-<h1>Visual AI Agent Demo - Step-by-Step</h1>
-<div id="explanation">Waiting for face detection...</div>
+<section class="section">
+  <div class="container">
+    <div>
+      <h1 class="title">Visual AI Agent Demo - Step-by-Step</h1>
+      <p id="explanation">Waiting for face detection...</p>
+    </div>
+  </div>
+</section>
+
 <div class="container">
   <div id="cameraBox">
     <div id="cameraWrapper">
       <video id="webcam" autoplay playsinline></video>
       <canvas id="overlay" width="640" height="480"></canvas>
     </div>
-    <button id="restartButton">Restart Camera</button>
+    <button id="restartButton" class="button is-primary">Restart Camera</button>
   </div>
   <iframe id="resultsFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
 </div>
@@ -114,7 +126,6 @@ async function runDemoSteps(){
   await new Promise(r=>setTimeout(r,5000));
 
   explanation.textContent=`Step 4: Opening first Wikipedia entry for "${term}"...`;
-  // Directly construct the Wikipedia URL for the term
   const wikiUrl=`https://en.wikipedia.org/wiki/${encodeURIComponent(term.replace(/ /g,'_'))}`;
   iframe.src=wikiUrl;
   await new Promise(r=>setTimeout(r,5000));
@@ -122,7 +133,6 @@ async function runDemoSteps(){
   explanation.textContent=`Step 5: Demo complete! You can browse the Wikipedia page in the iframe.`;
 }
 
-// Restart
 restartBtn.addEventListener('click', startCamera);
 startCamera();
 </script>
