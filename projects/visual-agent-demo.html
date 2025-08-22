@@ -1,199 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visual AI Agent Demo</title>
-
-<!-- MediaPipe -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-
-<!-- Particles.js -->
-<script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
-
-<style>
-  body {
-    font-family: sans-serif;
-    margin: 0;
-    background: #121212;
-    color: #fff;
-    text-align: center;
-    overflow-x: hidden;
-  }
-  #particles-js {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-  }
-  .container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 40px; /* space between camera and iframe */
-    margin-top: 30px;
-    flex-wrap: wrap;
-  }
-  #cameraBox {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  #webcam, #overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  #cameraWrapper {
-    position: relative;
-    width: 640px;
-    height: 480px;
-  }
-  #webcam { opacity: 0; } /* hide live video, only canvas shown */
-  canvas { border: 2px solid #fff; }
-  iframe { 
-    width: 600px; 
-    height: 480px; 
-    border: 2px solid #ccc; 
-    background: #fff; 
-  }
-  button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; color: #000; }
-</style>
+  <meta charset="UTF-8">
+  <title>Visual AI Agent Demo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #0d1117; /* cvless dark */
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #particles-js {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      top: 0;
+      left: 0;
+    }
+    .container {
+      display: flex;
+      gap: 20px; /* spacing between boxes */
+      padding: 20px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .box {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    }
+    video, canvas, iframe {
+      border-radius: 10px;
+      display: block;
+      max-width: 480px;
+    }
+    #restartBtn {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #238636;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    iframe {
+      width: 480px;
+      height: 360px;
+      border: none;
+      background: white; /* light mode background */
+    }
+  </style>
 </head>
 <body>
+  <div id="particles-js"></div>
 
-<div id="particles-js"></div>
-
-<h1>Visual AI Agent Demo</h1>
-<div class="container">
-  <div id="cameraBox">
-    <div id="cameraWrapper">
-      <video id="webcam" autoplay playsinline width="640" height="480"></video>
-      <canvas id="overlay" width="640" height="480"></canvas>
+  <div class="container">
+    <!-- Camera box -->
+    <div class="box">
+      <video id="video" autoplay playsinline width="480" height="360"></video>
+      <canvas id="canvas" width="480" height="360" style="display:none;"></canvas>
+      <br>
+      <button id="restartBtn">Restart Camera</button>
     </div>
-    <button id="restartButton">Restart Camera</button>
+
+    <!-- Wikipedia iframe -->
+    <div class="box">
+      <iframe id="wikiFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+    </div>
   </div>
-  <iframe id="wikiFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
-</div>
 
-<script>
-// Particles.js
-particlesJS("particles-js", {
-  particles: {
-    number: { value: 80 },
-    color: { value: "#ffffff" },
-    shape: { type: "circle" },
-    opacity: { value: 0.5 },
-    size: { value: 3 },
-    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
-    move: { enable: true, speed: 2 }
-  },
-  interactivity: { events: { onhover: { enable: true, mode: "repulse" } } }
-});
+  <!-- Face detection library -->
+  <script src="https://unpkg.com/face-api.js"></script>
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
-const video = document.getElementById('webcam');
-const canvas = document.getElementById('overlay');
-const ctx = canvas.getContext('2d');
-const iframe = document.getElementById('wikiFrame');
-const restartBtn = document.getElementById('restartButton');
-
-let camera = null;
-let detectedOnce = false;
-let pausedFrame = null;
-
-// Data science terms
-const dsTerms = [
-  "Data science","Machine learning","Artificial intelligence","Deep learning",
-  "Neural networks","Big data","Statistics","Predictive analytics",
-  "Natural language processing","Computer vision","Reinforcement learning",
-  "Supervised learning","Unsupervised learning","Clustering","Regression analysis"
-];
-
-function getRandomTerm() {
-    return dsTerms[Math.floor(Math.random() * dsTerms.length)];
-}
-
-// MediaPipe Face Detection
-const faceDetection = new FaceDetection({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
-});
-faceDetection.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
-
-faceDetection.onResults(results => {
-    if (pausedFrame) {
-        ctx.putImageData(pausedFrame, 0, 0);
-        return;
-    }
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    results.detections.forEach(detection => {
-        const box = detection.boundingBox;
-        ctx.strokeStyle = 'lime';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(
-          box.xCenter - box.width/2,
-          box.yCenter - box.height/2,
-          box.width,
-          box.height
-        );
+  <script>
+    // Particles background
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {"value": 80},
+        "size": {"value": 3},
+        "move": {"speed": 2}
+      }
     });
 
-    if (results.detections.length > 0 && !detectedOnce) {
-        detectedOnce = true;
-        pausedFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        stopCamera();
-        triggerAction();
-    }
-});
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const restartBtn = document.getElementById('restartBtn');
+    const iframe = document.getElementById('wikiFrame');
+    let cameraStream = null;
+    let paused = false;
 
-function startCamera() {
-    detectedOnce = false;
-    pausedFrame = null;
-    camera = new Camera(video, {
-        onFrame: async () => { await faceDetection.send({image: video}); },
-        width: 640,
-        height: 480
+    const terms = [
+      "Data science", "Machine learning", "Deep learning",
+      "Artificial intelligence", "Neural network",
+      "Regression analysis", "Random forest",
+      "Support vector machine", "K-means clustering",
+      "Natural language processing", "Reinforcement learning"
+    ];
+
+    function getRandomTerm() {
+      return terms[Math.floor(Math.random() * terms.length)];
+    }
+
+    // Start camera
+    async function startCamera() {
+      paused = false;
+      canvas.style.display = "none";
+      video.style.display = "block";
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = cameraStream;
+      detectFace();
+    }
+
+    // Pause camera on face detection
+    function pauseCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      video.style.display = "none";
+      canvas.style.display = "block";
+      paused = true;
+    }
+
+    // Face detection
+    async function detectFace() {
+      await faceapi.nets.tinyFaceDetector.loadFromUri("https://cdn.jsdelivr.net/npm/face-api.js/weights");
+
+      const interval = setInterval(async () => {
+        if (paused) {
+          clearInterval(interval);
+          return;
+        }
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
+        if (detections.length > 0) {
+          pauseCamera();
+          triggerAction();
+        }
+      }, 500);
+    }
+
+    // Wikipedia action
+    function triggerAction() {
+      const term = getRandomTerm();
+      const wikiUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(term)}&go=Go&safemode=1`;
+      iframe.src = wikiUrl;
+      console.log(`Face detected → Wikipedia article: ${term}`);
+    }
+
+    // Restart button
+    restartBtn.addEventListener("click", () => {
+      startCamera();
     });
-    camera.start();
-}
 
-function stopCamera() {
-    if (camera) {
-        camera.stop();
-        camera = null;
-    }
-}
-
-function triggerAction() {
-    const term = getRandomTerm();
-    iframe.src = `https://www.google.com/search?q=${encodeURIComponent(term)}+site:en.wikipedia.org&btnI=I`;
-    console.log(`Face detected! Wikipedia article: ${term}`);
-}
-
-// Force light mode once Wikipedia loads
-iframe.addEventListener("load", () => {
-  try {
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    if (doc) {
-      const style = doc.createElement("style");
-      style.innerHTML = `
-        body { background: #fff !important; color: #000 !important; }
-        #mw-panel, .vector-header, .vector-sticky-header { background: #f8f9fa !important; color: #000 !important; }
-      `;
-      doc.head.appendChild(style);
-    }
-  } catch (e) {
-    console.log("Cross-origin restriction: cannot inject styles directly.");
-  }
-});
-
-restartBtn.addEventListener('click', () => startCamera());
-
-startCamera();
-</script>
+    // Init
+    startCamera();
+  </script>
 </body>
 </html>
