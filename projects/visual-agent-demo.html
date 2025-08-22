@@ -34,7 +34,7 @@
 </div>
 
 <script>
-const BING_API_KEY = "YOUR_BING_API_KEY_HERE"; // <-- put your key here
+const BING_API_KEY = "YOUR_BING_API_KEY_HERE"; // <-- replace with your key
 const BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/visualsearch";
 
 const video = document.getElementById('webcam');
@@ -45,6 +45,7 @@ const restartBtn = document.getElementById('restartButton');
 
 let camera = null;
 let detectedOnce = false;
+let pausedFrame = null;
 
 // MediaPipe Face Detection
 const faceDetection = new FaceDetection({
@@ -65,15 +66,42 @@ faceDetection.onResults(results => {
     });
   }
 
+  // Only trigger once
   if(results.detections && results.detections.length > 0 && !detectedOnce){
     detectedOnce = true;
-    stopCamera();
-    sendToBingVisualSearch();
+
+    // Capture the frame before stopping camera
+    pausedFrame = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+    canvas.toBlob(async blob => {
+      stopCamera(); // Stop after capture
+
+      // Send blob to Bing Visual Search
+      const formData = new FormData();
+      formData.append("image", blob, "capture.png");
+
+      try {
+        const res = await fetch(BING_SEARCH_URL, {
+          method: "POST",
+          headers: { "Ocp-Apim-Subscription-Key": BING_API_KEY },
+          body: formData
+        });
+        const data = await res.json();
+        displayResultsInIframe(data, blob);
+      } catch(e){
+        console.error("Error fetching Bing Visual Search:", e);
+        displayResultsInIframe(null, blob); // fallback
+      }
+    }, "image/png");
+  } else if(pausedFrame){
+    // Keep the last frame visible after detection
+    ctx.putImageData(pausedFrame,0,0);
   }
 });
 
 function startCamera() {
   detectedOnce = false;
+  pausedFrame = null;
   camera = new Camera(video, {
     onFrame: async () => { await faceDetection.send({image: video}); },
     width: 640,
@@ -88,50 +116,37 @@ function stopCamera() {
 
 restartBtn.addEventListener('click', startCamera);
 
-// Send canvas image to Bing Visual Search
-async function sendToBingVisualSearch(){
-  canvas.toBlob(async blob => {
-    const formData = new FormData();
-    formData.append("image", blob, "capture.png");
-
-    try {
-      const res = await fetch(BING_SEARCH_URL, {
-        method: "POST",
-        headers: { "Ocp-Apim-Subscription-Key": BING_API_KEY },
-        body: formData
-      });
-      const data = await res.json();
-      displayResultsInIframe(data);
-    } catch(e){
-      console.error("Error fetching Bing Visual Search:", e);
-      alert("Check your API key and CORS permissions. Open console for details.");
-    }
-  }, "image/png");
-}
-
-// Build results HTML in iframe
-function displayResultsInIframe(data){
+// Build results in iframe
+function displayResultsInIframe(data, blob){
   let html = `<html><body style="font-family:sans-serif; padding:10px; background:#fff; color:#000;">`;
   html += `<h2>Visual Search Results</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`;
 
-  const tags = data.tags || [];
-  tags.forEach(tag => {
-    (tag.actions || []).forEach(action => {
-      if(action.actionType === "VisualSearch" && action.data && action.data.value){
-        action.data.value.forEach(item => {
-          if(item.thumbnailUrl){
-            html += `<a href="${item.hostPageUrl}" target="_blank">
-                      <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
-                     </a>`;
-          }
-        });
-      }
+  if(data && data.tags){
+    const tags = data.tags;
+    tags.forEach(tag => {
+      (tag.actions || []).forEach(action => {
+        if(action.actionType === "VisualSearch" && action.data && action.data.value){
+          action.data.value.forEach(item => {
+            if(item.thumbnailUrl){
+              html += `<a href="${item.hostPageUrl}" target="_blank">
+                        <img src="${item.thumbnailUrl}" width="150" style="border:1px solid #000"/>
+                       </a>`;
+            }
+          });
+        }
+      });
     });
-  });
+  }
+
+  // Fallback: show captured image if no results
+  if(!data || !data.tags || html === `<html><body style="font-family:sans-serif; padding:10px; background:#fff; color:#000;"><h2>Visual Search Results</h2><div style="display:flex; flex-wrap:wrap; gap:10px;">`){
+    const imgURL = URL.createObjectURL(blob);
+    html += `<p>No Bing results, showing captured image:</p>`;
+    html += `<img src="${imgURL}" width="300" style="border:1px solid #000"/>`;
+  }
 
   html += `</div></body></html>`;
-  const blob = new Blob([html], {type:"text/html"});
-  const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(new Blob([html], {type:'text/html'}));
   iframe.src = url;
 }
 
