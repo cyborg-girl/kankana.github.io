@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Instruction-based custom AI Chatbot</title>
+<title>Instruction-based AI Chatbot</title>
 
 <!-- CVless Dark Theme -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/cckanishka/cvless-dark/cvless-dark.css">
@@ -15,13 +15,14 @@ h1 { text-align: center; margin-bottom: 20px; }
 .panel { background: #1a1a1a; padding: 15px; border-radius: 10px; width: 400px; max-height: 600px; display: flex; flex-direction: column; }
 .panel h2 { margin-top: 0; margin-bottom: 10px; text-align: center; }
 .instructions-list, #chatbox { flex: 1; overflow-y: auto; border: 1px solid #444; border-radius: 6px; padding: 8px; margin-bottom: 10px; }
-.instructions-list div { margin-bottom: 5px; }
+.instructions-list div { margin-bottom: 5px; transition: background 0.3s ease; padding: 2px 4px; border-radius: 4px; }
 #inputArea, #instructionInputArea { display: flex; gap: 5px; }
 input, textarea { flex: 1; padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #555; background: #121212; color: #fff; }
 button { padding: 8px 12px; font-size: 14px; cursor: pointer; border-radius: 6px; border: none; background: #007bff; color: #fff; }
 .user-msg { color: #0ff; margin: 5px 0; }
 .bot-msg { color: #ff0; margin: 5px 0; }
 .bot-msg span { display: block; font-size: 12px; color: #aaa; margin-top: 2px; }
+.flash { background: #444 !important; }
 </style>
 </head>
 <body>
@@ -72,16 +73,28 @@ function renderInstructions() {
   instructions.forEach((inst, idx) => {
     const div = document.createElement("div");
     div.textContent = `${idx + 1}. ${inst}`;
+    div.dataset.index = idx;
     instructionsList.appendChild(div);
+  });
+}
+
+// Highlight relevant instructions briefly
+function flashInstructions(indices) {
+  indices.forEach(i => {
+    const div = instructionsList.querySelector(`div[data-index="${i}"]`);
+    if (div) {
+      div.classList.add("flash");
+      setTimeout(() => div.classList.remove("flash"), 600);
+    }
   });
 }
 
 // Keyword search to find relevant instructions
 function getRelevantInstructions(query) {
   query = query.toLowerCase();
-  return instructions.filter(inst =>
-    inst.toLowerCase().split(" ").some(word => query.includes(word))
-  );
+  const matched = instructions.map((inst, idx) => ({ inst, idx }))
+    .filter(({ inst }) => inst.toLowerCase().split(" ").some(word => query.includes(word)));
+  return matched;
 }
 
 // Typing effect for bot message
@@ -98,7 +111,7 @@ async function typeMessage(msg, sources=[]) {
 
   if (sources.length > 0) {
     const span = document.createElement("span");
-    span.textContent = "Based on instruction(s): " + sources.join("; ");
+    span.textContent = "Based on instruction(s): " + sources.map(s=>s.inst).join("; ");
     div.appendChild(span);
   }
 }
@@ -116,20 +129,24 @@ addInstructionBtn.onclick = () => {
 sendBtn.onclick = async () => {
   const q = userInput.value.trim();
   if (!q) return;
+
+  // Show user message
   const userDiv = document.createElement("div");
   userDiv.className = "user-msg";
   userDiv.textContent = q;
   chatbox.appendChild(userDiv);
   chatbox.scrollTop = chatbox.scrollHeight;
 
+  // Find relevant instructions
   const relevant = getRelevantInstructions(q);
   let ans, sources;
   if (relevant.length === 0) {
-    ans = "I can only answer based on the provided instructions.";
+    ans = "I'm sorry, this question is outside the scope of the AI agent based on its instructions.";
     sources = [];
   } else {
-    ans = relevant.join(" ");
+    ans = relevant.map(r => r.inst).join(" ");
     sources = relevant;
+    flashInstructions(relevant.map(r => r.idx));
   }
 
   await typeMessage(ans, sources);
