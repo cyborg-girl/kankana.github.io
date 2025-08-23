@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Context-Aware QA Agent — Demo</title>
+
+<!-- CVless-like dark theme (self-contained) -->
+<style>
+  :root{
+    --bg:#0d0d0d; 
+    --card:rgba(29,53,87,0.85);
+    --accent:#4cc9f0; 
+    --muted:#bfc9d9; 
+    --highlight:#ffd166; 
+    --chip:#223047;
+  }
+  html,body{margin:0; padding:0; background:var(--bg); color:#fff; font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; overflow-x:hidden;}
+  #particles-js{position:fixed; inset:0; z-index:-1;}
+
+  h1{ text-align:center; color:var(--accent); margin:48px 12px 8px; font-size:2.2rem; }
+  .demo-description{
+    max-width: 900px;
+    margin: 8px auto 24px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.55;
+    animation: fadeIn 0.9s ease-out;
+    padding: 0 16px;
+  }
+
+  .container{ 
+    max-width: 1100px; margin: 0 auto 80px; padding: 0 16px;
+    display: grid; grid-template-columns: 420px 1fr; gap: 24px;
+    animation: fadeIn 0.9s ease-out;
+  }
+  @media (max-width: 980px){
+    .container{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+  }
+  .card h2{ margin: 6px 0 10px; color: var(--accent); font-size: 1.2rem; }
+
+  /* Context editor */
+  .preset-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+  .chip{
+    background: var(--chip); color:#dbe9ff; border:1px solid rgba(255,255,255,0.06);
+    padding: 8px 10px; border-radius: 999px; font-size: 0.9rem; cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .chip:hover{ transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+
+  textarea.context{
+    width: 100%; min-height: 210px; resize: vertical;
+    padding: 12px; border-radius: 12px; border:1px solid rgba(255,255,255,0.06);
+    background: #0f1522; color: #eaf6ff; line-height: 1.4; font-size: 0.95rem;
+  }
+
+  .meta-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .select{
+    background:#0f1522; color:#eaf6ff; border:1px solid rgba(255,255,255,0.06);
+    padding: 8px 10px; border-radius: 10px; font-size: 0.95rem;
+  }
+
+  .note{ color: var(--muted); font-size: .9rem; margin-top: 8px; }
+
+  /* Context lines (for highlight) */
+  .ctx-lines{ margin-top: 12px; }
+  .ctx-line{
+    background: rgba(255,255,255,0.05);
+    padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; font-size: .95rem;
+    transition: transform .2s ease, background .3s ease;
+  }
+  .ctx-line.flash{ background: var(--highlight); color:#000; transform: scale(1.02); }
+
+  /* Chat column */
+  .chatbox{ display:flex; flex-direction:column; gap:12px; }
+  .msgs{
+    min-height: 260px; max-height: 520px; overflow-y:auto;
+    background: rgba(0,0,0,0.12); border:1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 12px;
+  }
+  .msg{ display:flex; margin-bottom:10px; gap:8px; animation: fadeInUp .4s ease; }
+  .msg .bubble{
+    padding:10px 12px; border-radius:12px; line-height:1.45; max-width: 82%;
+  }
+  .msg.user .bubble{ background: var(--accent); color:#0b1020; margin-left:auto; }
+  .msg.bot .bubble{ background: rgba(255,255,255,0.08); color:#fff; }
+
+  .qa-row{ display:flex; gap:8px; }
+  .qa-row input{
+    flex:1; padding:12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);
+    background:#0f1522; color:#eaf6ff; font-size:1rem;
+  }
+  .btn{
+    background: linear-gradient(135deg, var(--accent), #4895ef);
+    color:#0b1020; border:none; padding: 10px 14px; font-weight:700;
+    border-radius: 12px; cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .btn:hover{ transform: translateY(-1px); box-shadow: 0 6px 22px rgba(76,201,240,0.35); }
+
+  /* Animations */
+  .fade-in { animation: fadeIn .9s ease-out; }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+  @keyframes fadeInUp{ from{opacity:0; transform: translateY(8px);} to{opacity:1; transform:none;} }
+</style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<h1>Context-Aware QA - AI Agent</h1>
+<div class="demo-description">
+  This demo shows how <strong>context engineering</strong> shapes an AI agent’s behavior.
+  Edit the context on the left or choose a preset, then ask a question on the right.
+  The agent answers using patterns from the context and <em>highlights</em> which lines influenced the reply (no external model calls).
+</div>
+
+<div class="container">
+  <!-- LEFT: Context editor -->
+  <section class="card">
+    <h2>System Context</h2>
+    <div class="preset-row">
+      <span class="chip" data-preset="teacher">Friendly Teacher</span>
+      <span class="chip" data-preset="travel">Eco Travel Planner</span>
+      <span class="chip" data-preset="concise">Concise Analyst</span>
+      <span class="chip" data-preset="legal">Risk-Aware Advisor</span>
+      <span class="chip" data-preset="chef">Chef Assistant</span>
+    </div>
+
+    <textarea id="contextInput" class="context" placeholder="Write the agent's behavior and constraints here (one rule per line). For best highlighting, keep rules concise."></textarea>
+
+    <div class="meta-row">
+      <select id="tone" class="select" title="Tone">
+        <option value="neutral">Tone: Neutral</option>
+        <option value="friendly">Tone: Friendly</option>
+        <option value="formal">Tone: Formal</option>
+        <option value="enthusiastic">Tone: Enthusiastic</option>
+      </select>
+      <select id="formatting" class="select" title="Formatting">
+        <option value="paragraph">Format: Paragraph</option>
+        <option value="bullets">Format: Bullets</option>
+        <option value="steps">Format: Steps</option>
+      </select>
+      <select id="verbosity" class="select" title="Verbosity">
+        <option value="medium">Verbosity: Medium</option>
+        <option value="brief">Verbosity: Brief</option>
+        <option value="detailed">Verbosity: Detailed</option>
+      </select>
+    </div>
+
+    <div class="note">Tip: Keep one instruction per line. The agent maps your question to the most relevant lines and flashes them when used.</div>
+
+    <div class="ctx-lines" id="ctxLines"></div>
+  </section>
+
+  <!-- RIGHT: Chatbot -->
+  <section class="card chatbox">
+    <h2>Ask the Agent</h2>
+
+    <div class="msgs" id="msgs">
+      <div class="msg bot">
+        <div class="bubble">
+          Hi! Set my <em>system context</em> on the left or choose a preset, then ask me something here. I’ll shape my answer to match the context.
+          <div class="small" style="color:var(--muted); margin-top:6px;">(Local demo: no server or external LLM required.)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa-row">
+      <input id="userQ" type="text" placeholder="e.g., Plan a 3-day Paris trip on a budget" />
+      <button id="askBtn" class="btn">Ask</button>
+    </div>
+  </section>
+</div>
+
+<!-- Particles.js -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+  particlesJS("particles-js", {
+    particles: {
+      number:{value:70}, size:{value:3}, color:{value:"#4cc9f0"},
+      move:{speed:1},
+      line_linked:{enable:true, distance:140, color:"#4cc9f0"}
+    },
+    interactivity:{ events:{ onhover:{ enable:true, mode:"repulse"}}}
+  });
+</script>
+
+<!-- Demo logic (no external LLM) -->
+<script>
+  // ======= Presets =======
+  const PRESETS = {
+    teacher: [
+      "Explain concepts simply with analogies when useful.",
+      "Prefer step-by-step structure for how-to questions.",
+      "Avoid jargon; define necessary terms briefly.",
+      "Offer 1–2 quick examples for clarity when appropriate.",
+      "Be encouraging and concise."
+    ],
+    travel: [
+      "Act as an eco-conscious travel planner.",
+      "Prioritize public transport, walking, and biking.",
+      "Recommend budget-friendly, sustainable options.",
+      "Include a short daily itinerary with time estimates.",
+      "Avoid activities with high carbon footprints."
+    ],
+    concise: [
+      "Be concise and to the point.",
+      "Use bullet points unless asked otherwise.",
+      "Lead with the direct answer; add minimal context.",
+      "Avoid filler and hedging language."
+    ],
+    legal: [
+      "Be risk-aware and call out uncertainties.",
+      "Include a short 'Considerations & Risks' section.",
+      "Avoid definitive legal, medical, or financial claims.",
+      "Encourage consulting a qualified professional when needed."
+    ],
+    chef: [
+      "Act as a friendly home-cooking assistant.",
+      "Suggest simple, affordable ingredients with substitutions.",
+      "Provide step-by-step instructions with approximate timings.",
+      "Offer a quick tip for flavor or plating."
+    ],
+  };
+
+  // ======= DOM Refs =======
+  const contextInput = document.getElementById('contextInput');
+  const toneSel = document.getElementById('tone');
+  const fmtSel = document.getElementById('formatting');
+  const verbSel = document.getElementById('verbosity');
+  const ctxLinesEl = document.getElementById('ctxLines');
+  const msgs = document.getElementById('msgs');
+  const askBtn = document.getElementById('askBtn');
+  const userQ = document.getElementById('userQ');
+
+  // Seed with a default preset to show structure
+  applyPreset('teacher');
+
+  // Render context lines for highlight
+  function renderCtxLines() {
+    ctxLinesEl.innerHTML = '';
+    getContextLines().forEach((line, idx) => {
+      const div = document.createElement('div');
+      div.className = 'ctx-line';
+      div.dataset.index = String(idx);
+      div.textContent = `${idx+1}. ${line}`;
+      ctxLinesEl.appendChild(div);
+    });
+  }
+
+  function getContextLines(){
+    return contextInput.value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function applyPreset(key){
+    if(!PRESETS[key]) return;
+    contextInput.value = PRESETS[key].join('\n');
+    renderCtxLines();
+  }
+
+  // preset buttons
+  document.querySelectorAll('.chip[data-preset]').forEach(chip=>{
+    chip.addEventListener('click', ()=> applyPreset(chip.dataset.preset));
+  });
+
+  // re-render when context changes
+  contextInput.addEventListener('input', renderCtxLines);
+
+  // ======= Simple scoring & shaping engine (no external LLM) =======
+  function scoreMatch(query, instruction){
+    const q = query.toLowerCase().split(/\W+/).filter(Boolean);
+    const i = instruction.toLowerCase().split(/\W+/).filter(Boolean);
+    return i.reduce((acc,w)=> acc + (q.includes(w) ? 1 : 0), 0);
+  }
+
+  function selectRelevantLines(query){
+    const lines = getContextLines();
+    const scored = lines.map((inst, idx)=> ({inst, idx, score: scoreMatch(query, inst)}));
+    scored.sort((a,b)=> b.score - a.score);
+    const top = scored.filter(s => s.score > 0).slice(0, 3); // up to 3 relevant
+    return top;
+  }
+
+  function flashCtx(indices){
+    indices.forEach(i=>{
+      const el = ctxLinesEl.querySelector(`.ctx-line[data-index="${i}"]`);
+      if(el){
+        el.classList.add('flash');
+        setTimeout(()=> el.classList.remove('flash'), 800);
+      }
+    });
+  }
+
+  // Very small domain hints to demonstrate context shaping
+  function inferDomain(query){
+    const q = query.toLowerCase();
+    if(/trip|travel|hotel|itinerary|paris|fly|train|metro|museum|city/.test(q)) return 'travel';
+    if(/recipe|cook|ingredients|oven|bake|pan|dinner|meal/.test(q)) return 'cooking';
+    if(/invest|stock|budget|cost|price|save|financial|money/.test(q)) return 'finance';
+    if(/explain|how|why|what is|steps|learn|study/.test(q)) return 'teaching';
+    return 'general';
+  }
+
+  function applyTone(text, tone){
+    if(tone === 'friendly') return "Hey! " + text.replace(/\.$/, "") + ". 😊";
+    if(tone === 'formal') return "Proceeding as requested: " + text;
+    if(tone === 'enthusiastic') return "Absolutely! " + text.replace(/\.$/, "") + " 🚀";
+    return text;
+  }
+
+  function formatAnswer(core, formatting){
+    if(formatting === 'bullets'){
+      const pts = core.split(/[.;]\s+/).filter(Boolean).slice(0,6);
+      return "• " + pts.join("\n• ");
+    }
+    if(formatting === 'steps'){
+      const pts = core.split(/[.;]\s+/).filter(Boolean).slice(0,6);
+      return pts.map((p,i)=> `${i+1}. ${p}`).join("\n");
+    }
+    return core; // paragraph
+  }
+
+  function adjustVerbosity(text, level){
+    if(level === 'brief'){
+      return text.split(/[.!?]\s+/).slice(0,2).join(". ") + ".";
+    }
+    if(level === 'detailed'){
+      // add a brief concluding sentence
+      return text + " If you’d like, I can refine this further based on your constraints.";
+    }
+    return text;
+  }
+
+  function synthesizeAnswer(question, selectedLines){
+    // Basic template driven by domain + selected context
+    const domain = inferDomain(question);
+    const rules = selectedLines.map(s=> s.inst);
+
+    let core = "";
+    if(domain === 'travel'){
+      core = "Here’s a short plan tailored to your request. Consider low-impact transport and nearby attractions. Favor walkable routes and public transit, and pick budget-friendly stays.";
+    } else if(domain === 'cooking'){
+      core = "Here’s a simple approach with accessible ingredients and clear steps. Use substitutions when needed and adjust seasoning to taste.";
+    } else if(domain === 'finance'){
+      core = "Here’s a concise breakdown of options, costs, and key tradeoffs. Note uncertainties and assess risk before deciding.";
+    } else if(domain === 'teaching'){
+      core = "I’ll explain the idea simply and step-by-step, defining terms briefly and adding a quick example.";
+    } else {
+      core = "Here’s a context-shaped answer focusing on your goals and constraints.";
+    }
+
+    // Blend in cues from context lines (heuristic)
+    const hints = rules.join(" ").toLowerCase();
+    if(/step/.test(hints) && !/step/.test(core)) core += " Presenting this as steps for clarity.";
+    if(/example/.test(hints) && !/example/.test(core)) core += " Including a quick example.";
+    if(/concise/.test(hints)) core = core.replace("short plan", "concise plan");
+    if(/avoid jargon/.test(hints)) core += " I’ll avoid jargon.";
+    if(/risk/.test(hints)) core += " I’ll call out risks explicitly.";
+
+    // Add a small example when asked “how/what is”
+    if(/\bhow\b|\bwhat is\b/i.test(question)) {
+      if(domain === 'teaching') core += " Example: imagine water flowing through pipes as an analogy for current in a circuit.";
+      if(domain === 'cooking') core += " Example: swap yogurt for buttermilk if needed.";
+    }
+
+    return core;
+  }
+
+  function renderBotMessage(text, sources){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg bot';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.style.whiteSpace = 'pre-wrap';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+
+    if(sources && sources.length){
+      const src = document.createElement('div');
+      src.className = 'note';
+      src.textContent = "Based on instruction(s): " + sources.map(s=> `${s.idx+1}`).join(", ");
+      bubble.appendChild(document.createElement('br'));
+      bubble.appendChild(src);
+    }
+
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function renderUserMessage(text){
+    const wrap = document.createElement('div');
+    wrap.className = 'msg user';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // Ask flow
+  askBtn.addEventListener('click', ()=> {
+    const q = userQ.value.trim();
+    if(!q) return;
+    renderUserMessage(q);
+
+    const selected = selectRelevantLines(q);
+    if(selected.length){
+      flashCtx(selected.map(s=> s.idx));
+    }
+
+    const core = synthesizeAnswer(q, selected);
+    let text = core;
+    text = applyTone(text, toneSel.value);
+    text = formatAnswer(text, fmtSel.value);
+    text = adjustVerbosity(text, verbSel.value);
+
+    renderBotMessage(text, selected);
+    userQ.value = '';
+  });
+
+  userQ.addEventListener('keypress', e=> { if(e.key==='Enter') askBtn.click(); });
+
+  // Initial render
+  renderCtxLines();
+</script>
+
+</body>
+</html>
