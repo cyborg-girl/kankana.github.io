@@ -8,12 +8,6 @@
 <!-- Particles.js -->
 <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 
-<!-- Xenova Transformers -->
-<script type="module">
-  import * as transformers from 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.js';
-  window.transformers = transformers;
-</script>
-
 <style>
 :root{
   --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent:#4cc9f0; --muted:#bfc9d9;
@@ -53,51 +47,56 @@ button{padding:10px 16px;border:none;border-radius:10px;background:linear-gradie
   </div>
 </div>
 
-<script>
+<script type="module">
+import * as transformers from 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.js';
+
+window.transformers = transformers; // attach globally
+
+// Particles.js
 particlesJS("particles-js", {
   particles: { number:{value:70}, size:{value:3}, move:{speed:1}, line_linked:{enable:true,distance:140,color:"#4cc9f0"}, color:{value:"#4cc9f0"} },
   interactivity: { events:{ onhover:{ enable:true, mode:"repulse" } } }
 });
 
-// Initialize pipeline
 let qaPipeline;
-(async()=>{
-  document.getElementById('outputWithContext').textContent = "Loading model...";
-  document.getElementById('outputNoContext').textContent = "Loading model...";
-  qaPipeline = await transformers.pipeline('question-answering', 'Xenova/distilbert-base-cased-distilled-squad');
-  document.getElementById('outputWithContext').textContent = "Model loaded ✅";
-  document.getElementById('outputNoContext').textContent = "Model loaded ✅";
-})();
+const outputWithContext = document.getElementById('outputWithContext');
+const outputNoContext = document.getElementById('outputNoContext');
 
-// Helper to safely get string values
+async function loadModel(){
+  outputWithContext.textContent = "Loading model...";
+  outputNoContext.textContent = "Loading model...";
+  qaPipeline = await transformers.pipeline('question-answering', 'Xenova/distilbert-base-cased-distilled-squad');
+  outputWithContext.textContent = "Model loaded ✅";
+  outputNoContext.textContent = "Model loaded ✅";
+}
+loadModel();
+
 function getInput(id){ return String(document.getElementById(id).value || ""); }
 
-// Ask With Context
 document.getElementById('submitWithContext').onclick = async () => {
-  if(!qaPipeline){ document.getElementById('outputWithContext').textContent="Model not ready yet."; return; }
+  if(!qaPipeline){ outputWithContext.textContent="Model not ready yet."; return; }
   const context = getInput('contextInput');
   const question = getInput('questionNoContext');
-  if(!question || !context){ document.getElementById('outputWithContext').textContent="Enter both question and context."; return; }
-  document.getElementById('outputWithContext').textContent="Processing...";
+  if(!question || !context){ outputWithContext.textContent="Enter both question and context."; return; }
+  outputWithContext.textContent="Processing...";
   try{
     const answer = await qaPipeline({question, context});
-    document.getElementById('outputWithContext').textContent = answer?.answer || "No answer found.";
+    outputWithContext.textContent = answer?.answer || "No answer found.";
   }catch(e){
-    document.getElementById('outputWithContext').textContent="Error: "+e.message;
+    outputWithContext.textContent="Error: "+e.message;
   }
 };
 
-// Ask Without Context
 document.getElementById('submitNoContext').onclick = async () => {
-  if(!qaPipeline){ document.getElementById('outputNoContext').textContent="Model not ready yet."; return; }
+  if(!qaPipeline){ outputNoContext.textContent="Model not ready yet."; return; }
   const question = getInput('questionNoContext');
-  if(!question){ document.getElementById('outputNoContext').textContent="Enter a question."; return; }
-  document.getElementById('outputNoContext').textContent="Processing...";
+  if(!question){ outputNoContext.textContent="Enter a question."; return; }
+  outputNoContext.textContent="Processing...";
   try{
     const answer = await qaPipeline({question, context:""}); // empty context
-    document.getElementById('outputNoContext').textContent = answer?.answer || "No answer found.";
+    outputNoContext.textContent = answer?.answer || "No answer found.";
   }catch(e){
-    document.getElementById('outputNoContext').textContent="Error: "+e.message;
+    outputNoContext.textContent="Error: "+e.message;
   }
 };
 </script>
