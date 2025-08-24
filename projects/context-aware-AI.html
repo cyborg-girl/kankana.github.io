@@ -5,120 +5,134 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Context-Aware QA Agent Demo</title>
 
-<!-- CVless theme basic styling -->
+<!-- CVless theme-like dark styling -->
 <style>
-  :root { --bg:#0d0d0d; --card:rgba(29,53,87,0.85); --accent:#4cc9f0; --muted:#bfc9d9; }
-  html, body { margin:0; padding:0; font-family: "Inter", sans-serif; background:var(--bg); color:#fff; height:100%; }
-  #particles-js { position:fixed; inset:0; z-index:-1; }
-  h1 { text-align:center; color:var(--accent); margin-top:30px; }
-  .description { text-align:center; max-width:800px; margin:10px auto 40px; color:var(--muted); }
-  .container { display:flex; justify-content:center; align-items:flex-start; gap:20px; flex-wrap:wrap; padding:0 20px; }
-  .card { background:var(--card); border-radius:16px; padding:20px; max-width:480px; flex:1; min-width:300px; }
-  h2 { margin-top:0; color:var(--accent); font-size:1.2rem; }
-  .textarea { width:100%; height:100px; margin-bottom:10px; padding:8px; border-radius:8px; border:none; background:#111; color:#fff; resize:none; }
-  button { width:100%; padding:10px; border-radius:10px; border:none; font-weight:700; cursor:pointer; background:linear-gradient(135deg,var(--accent),#4895ef); color:#0b1020; }
-  .output { margin-top:12px; padding:10px; background:rgba(0,0,0,0.15); border-radius:10px; min-height:50px; white-space:pre-wrap; }
-  .status { margin-top:6px; font-size:0.9rem; color:var(--muted); }
+:root {
+  --bg: #0d0d0d;
+  --card: rgba(29,53,87,0.85);
+  --accent: #4cc9f0;
+  --muted: #bfc9d9;
+}
+html, body { margin:0; padding:0; height:100%; background: var(--bg); font-family: "Inter", sans-serif; color: #fff;}
+#particles-js { position:fixed; inset:0; z-index:-1; }
+.container { display:flex; flex-wrap:wrap; justify-content:center; gap:24px; padding:24px;}
+.card { background: var(--card); padding:24px; border-radius:16px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); width: 400px;}
+h1 { color: var(--accent); text-align:center; }
+textarea { width:100%; height:80px; border-radius:10px; padding:8px; border:none; resize:none;}
+button { padding:10px 16px; border:none; border-radius:10px; font-weight:700; cursor:pointer; background:linear-gradient(135deg,var(--accent),#4895ef); color:#0b1020; margin-top:8px;}
+.status { font-size:0.9rem; color: var(--muted); margin-top:6px;}
+.output { background: rgba(0,0,0,0.12); padding:12px; border-radius:10px; margin-top:8px; min-height:40px;}
+.note { font-size:0.85rem; color: var(--muted); margin-top:6px;}
 </style>
 
 <!-- Particles.js -->
-<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-<script>
-particlesJS("particles-js", {
-  particles: { number:{value:70}, size:{value:3}, move:{speed:1}, line_linked:{enable:true,distance:140,color:"#4cc9f0"}, color:{value:"#4cc9f0"} },
-  interactivity:{ events:{ onhover:{ enable:true, mode:"repulse" } } }
-});
-</script>
-
-<!-- Xenova Transformers -->
-<script type="module">
-  import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js';
-
-  let qaPipeline = null;
-
-  async function loadModel(statusEl) {
-    try {
-      statusEl.textContent = "Loading QA model...";
-      qaPipeline = await pipeline('question-answering', 'Xenova/distilbert-base-cased-distilled-squad');
-      statusEl.textContent = "Model loaded ✅";
-    } catch(e) {
-      console.error(e);
-      statusEl.textContent = "Failed to load model. See console.";
-    }
-  }
-
-  window.loadQAModel = loadModel;
-</script>
+<script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
 </head>
-
 <body>
+
 <div id="particles-js"></div>
 
 <h1>Context-Aware QA Agent Demo</h1>
-<div class="description">
-  This demo shows how the same question can produce different answers depending on the context. Type a question and optionally provide context, then compare the results side by side.
+<div class="note" style="text-align:center; max-width:900px; margin:auto;">
+This demo shows how the same AI question can produce different answers when given contextual information. Type a question below and see the difference between answers <strong>without context</strong> and <strong>with context</strong>.
 </div>
 
 <div class="container">
   <!-- Without Context -->
   <div class="card">
     <h2>Without Context</h2>
-    <textarea id="questionNoContext" class="textarea" placeholder="Enter your question"></textarea>
-    <button id="askNoContextBtn">Get Answer</button>
-    <div class="status" id="statusNoContext">Model loading...</div>
-    <div class="output" id="outputNoContext"></div>
+    <textarea id="questionNoContext" placeholder="Enter your question here..."></textarea>
+    <button id="askNoContextBtn">Ask</button>
+    <div class="status" id="statusNo">Model loading...</div>
+    <div class="output" id="outputNo">Answer will appear here</div>
   </div>
 
   <!-- With Context -->
   <div class="card">
     <h2>With Context</h2>
-    <textarea id="questionContext" class="textarea" placeholder="Enter your question"></textarea>
-    <textarea id="contextText" class="textarea" placeholder="Enter context here"></textarea>
-    <button id="askWithContextBtn">Get Answer</button>
-    <div class="status" id="statusWithContext">Model loading...</div>
-    <div class="output" id="outputWithContext"></div>
+    <textarea id="questionWithContext" placeholder="Enter your question here..."></textarea>
+    <textarea id="contextInput" placeholder="Enter context here..."></textarea>
+    <button id="askWithContextBtn">Ask</button>
+    <div class="status" id="statusWith">Model loading...</div>
+    <div class="output" id="outputWith">Answer will appear here</div>
   </div>
 </div>
 
+<!-- Load Transformers.js and setup QA pipeline -->
 <script type="module">
-  const statusNo = document.getElementById('statusNoContext');
-  const statusWith = document.getElementById('statusWithContext');
-  const outputNo = document.getElementById('outputNoContext');
-  const outputWith = document.getElementById('outputWithContext');
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js';
 
-  await loadQAModel(statusNo);
-  await loadQAModel(statusWith);
+// Global pipeline variable
+window.qaPipeline = null;
 
-  document.getElementById('askNoContextBtn').addEventListener('click', async () => {
-    if(!qaPipeline) { outputNo.textContent="Model not ready."; return; }
-    const question = document.getElementById('questionNoContext').value.trim();
-    if(!question) return;
-    statusNo.textContent="Answering...";
-    try {
-      const ans = await qaPipeline({ question, context:"" });
-      outputNo.textContent = ans.answer;
-      statusNo.textContent="Done ✅";
-    } catch(e) {
-      console.error(e);
-      statusNo.textContent="Error. See console.";
-    }
-  });
+// Load the model
+async function loadQAModel() {
+  const statusNo = document.getElementById('statusNo');
+  const statusWith = document.getElementById('statusWith');
+  try {
+    statusNo.textContent = 'Loading QA model...';
+    statusWith.textContent = 'Loading QA model...';
+    window.qaPipeline = await pipeline('question-answering', 'Xenova/distilbert-base-cased-distilled-squad');
+    statusNo.textContent = 'Model loaded ✅';
+    statusWith.textContent = 'Model loaded ✅';
+  } catch(e) {
+    console.error(e);
+    statusNo.textContent = 'Failed to load model';
+    statusWith.textContent = 'Failed to load model';
+  }
+}
+loadQAModel();
+</script>
 
-  document.getElementById('askWithContextBtn').addEventListener('click', async () => {
-    if(!qaPipeline) { outputWith.textContent="Model not ready."; return; }
-    const question = document.getElementById('questionContext').value.trim();
-    const context = document.getElementById('contextText').value.trim();
-    if(!question) return;
-    statusWith.textContent="Answering...";
-    try {
-      const ans = await qaPipeline({ question, context });
-      outputWith.textContent = ans.answer;
-      statusWith.textContent="Done ✅";
-    } catch(e) {
-      console.error(e);
-      statusWith.textContent="Error. See console.";
-    }
-  });
+<script>
+// Buttons
+const askNoContextBtn = document.getElementById('askNoContextBtn');
+const askWithContextBtn = document.getElementById('askWithContextBtn');
+
+askNoContextBtn.addEventListener('click', async ()=>{
+  const question = document.getElementById('questionNoContext').value.trim();
+  const output = document.getElementById('outputNo');
+  const status = document.getElementById('statusNo');
+  if(!question) return;
+  if(!window.qaPipeline) { output.textContent = "Model not ready."; return; }
+  status.textContent = "Answering...";
+  try {
+    const ans = await window.qaPipeline({ question, context:"" });
+    output.textContent = ans.answer;
+    status.textContent = "Done ✅";
+  } catch(e) {
+    console.error(e);
+    output.textContent = "Error. See console.";
+    status.textContent = "Error";
+  }
+});
+
+askWithContextBtn.addEventListener('click', async ()=>{
+  const question = document.getElementById('questionWithContext').value.trim();
+  const context = document.getElementById('contextInput').value.trim();
+  const output = document.getElementById('outputWith');
+  const status = document.getElementById('statusWith');
+  if(!question) return;
+  if(!window.qaPipeline) { output.textContent = "Model not ready."; return; }
+  status.textContent = "Answering...";
+  try {
+    const ans = await window.qaPipeline({ question, context: context || "" });
+    output.textContent = ans.answer;
+    status.textContent = "Done ✅";
+  } catch(e) {
+    console.error(e);
+    output.textContent = "Error. See console.";
+    status.textContent = "Error";
+  }
+});
+</script>
+
+<!-- Particles.js -->
+<script>
+particlesJS("particles-js", {
+  particles: { number:{value:70}, size:{value:3}, move:{speed:1}, line_linked:{ enable:true, distance:140, color:"#4cc9f0" }, color:{value:"#4cc9f0"} },
+  interactivity: { events: { onhover: { enable:true, mode:"repulse" } } }
+});
 </script>
 </body>
 </html>
