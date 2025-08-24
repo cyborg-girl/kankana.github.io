@@ -20,7 +20,7 @@
     textarea {width:100%;min-height:60px;padding:0.5rem;border-radius:8px;border:none;resize:vertical;}
     button {margin-top:0.5rem;padding:0.5rem 1rem;border:none;border-radius:8px;background:#238636;color:white;cursor:pointer;}
     button:hover {background:#2ea043;}
-    .answer {margin-top:1rem;padding:0.5rem;background:#0d1117;border-radius:8px;min-height:50px;}
+    .answer {margin-top:1rem;padding:0.5rem;background:#0d1117;border-radius:8px;min-height:60px;white-space:pre-wrap;}
   </style>
 </head>
 <body>
@@ -67,21 +67,26 @@
       }
     }
 
-    // Mock "model" with random but seeded outputs
+    // Mock "model" with stronger answers
     function generateAnswer(seed, question, context="") {
       let rand = mulberry32(seed);
-      let baseAnswers = [
-        `That’s an interesting question. I think it depends a lot on perspective.`,
-        `From what I can tell, the answer lies in patterns we’ve seen before.`,
-        `It seems related to something we already understand.`,
-        `I would explain it in terms of cause and effect.`,
-        `It’s complicated, but I’ll try to simplify.`
+      let genericBase = [
+        `Here’s a general explanation: `,
+        `Based on common knowledge, we can say: `,
+        `One way to look at this question is: `,
+        `Generally speaking: `,
+        `From a high-level perspective: `
       ];
-      let ans = baseAnswers[Math.floor(rand()*baseAnswers.length)];
+      let base = genericBase[Math.floor(rand()*genericBase.length)];
+
+      let answer = base + " " + question + " is a meaningful question. " +
+        "Without specific context, the best we can do is provide a broad answer that outlines the main ideas and possibilities.";
+
       if(context.trim() !== "") {
-        ans += " With the given context, it becomes clearer: " + context.split(" ").slice(0,6).join(" ") + "...";
+        answer += "\n\n📌 With the provided context, we can refine this answer:\n" + context;
       }
-      return ans;
+
+      return answer;
     }
 
     function answer(useContext){
