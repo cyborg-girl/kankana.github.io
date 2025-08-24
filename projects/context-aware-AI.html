@@ -5,83 +5,164 @@
   <title>Context-Aware QA Agent Demo</title>
   <style>
     body {
-      margin:0;
-      font-family: 'Arial', sans-serif;
-      background:#0d1117;
-      color:#e6edf3;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0d1117;
+      color: #e6edf3;
+      overflow-x: hidden;
     }
-    #particles-js {position:fixed;width:100%;height:100%;z-index:-1;}
-    .container {max-width:1200px;margin:0 auto;padding:2rem;}
-    h1 {text-align:center;font-size:2.2rem;margin-bottom:0.5rem;}
-    p.intro {text-align:center;font-size:1rem;color:#9ba4b5;margin-bottom:2rem;}
-    .grid {display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-    .box {background:#161b22;padding:1rem;border-radius:12px;box-shadow:0 0 12px rgba(0,0,0,0.4);}
-    textarea {width:100%;min-height:60px;padding:0.5rem;border-radius:8px;border:none;resize:vertical;}
-    button {margin-top:0.5rem;padding:0.5rem 1rem;border:none;border-radius:8px;background:#238636;color:white;cursor:pointer;}
-    button:hover {background:#2ea043;}
-    .answer {margin-top:1rem;padding:0.5rem;background:#0d1117;border-radius:8px;min-height:60px;white-space:pre-wrap;}
+    h1 {
+      text-align: center;
+      padding: 20px;
+      color: #58a6ff;
+    }
+    #description {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 20px auto;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #c9d1d9;
+    }
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      top: 0;
+      left: 0;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+    .section {
+      background: #161b22;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #58a6ff;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      padding: 10px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      resize: none;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #238636;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #2ea043;
+    }
+    .output {
+      margin-top: 15px;
+      padding: 10px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      min-height: 40px;
+    }
   </style>
 </head>
 <body>
   <div id="particles-js"></div>
+
+  <h1>Context-Aware QA Agent Demo</h1>
+  <div id="description">
+    This demo showcases <strong>context engineering</strong> in AI.  
+    You can ask the same question <em>with and without context</em>, and see how context helps the AI provide more accurate and relevant answers.
+  </div>
+
   <div class="container">
-    <h1>Context-Aware QA Agent Demo</h1>
-    <p class="intro">This demo shows how context engineering changes responses. The same model produces richer answers when extra context is supplied.</p>
-    
-    <div class="grid">
-      <div class="box">
-        <h2>Without Context</h2>
-        <textarea id="question" placeholder="Ask a question..."></textarea>
-        <button onclick="answer(false)">Ask Without Context</button>
-        <div class="answer" id="noContextAns"></div>
-      </div>
-      <div class="box">
-        <h2>With Context</h2>
-        <textarea id="context" placeholder="Provide extra context..."></textarea>
-        <button onclick="answer(true)">Ask With Context</button>
-        <div class="answer" id="withContextAns"></div>
-      </div>
+    <div class="section">
+      <h2>Ask without Context</h2>
+      <textarea id="question1" placeholder="Type your question..."></textarea>
+      <button id="askBtn">Ask Both</button>
+      <div id="output1" class="output">Answer will appear here...</div>
+    </div>
+
+    <div class="section">
+      <h2>Ask with Context</h2>
+      <textarea id="question2" placeholder="Type your question..."></textarea>
+      <textarea id="context" placeholder="Provide some context here..."></textarea>
+      <div id="output2" class="output">Answer will appear here...</div>
     </div>
   </div>
 
+  <!-- HF Transformers.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers"></script>
   <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+
   <script>
-    particlesJS("particles-js", {
-      "particles":{"number":{"value":60},"size":{"value":2},"color":{"value":"#ffffff"},
-      "line_linked":{"enable":true,"color":"#ffffff"},"move":{"speed":1.5},
-      "interactivity":{"events":{"onhover":{"enable":true,"mode":"repulse"}}}
-    );
-  </script>
-
-  <!-- Transformers.js -->
-  <script type="module">
-    import { pipeline } from "https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js";
-
     let qaPipeline;
-    async function loadModel() {
-      qaPipeline = await pipeline("question-answering", "Xenova/distilbert-base-cased-distilled-squad", { quantized: true });
-      console.log("QA model loaded");
-    }
-    loadModel();
 
-    async function answer(useContext) {
-      const q = document.getElementById("question").value.trim();
-      const ctx = document.getElementById("context").value.trim();
-      if (!q) { alert("Please enter a question."); return; }
-      if (!qaPipeline) { alert("Model not loaded yet. Please wait..."); return; }
+    // Load Hugging Face pipeline
+    (async () => {
+      qaPipeline = await window.transformers.pipeline(
+        "question-answering",
+        "Xenova/distilbert-base-cased-distilled-squad"
+      );
+      console.log("✅ QA pipeline loaded");
+    })();
 
-      // if no context, use a default general passage
-      const passage = useContext && ctx ? ctx : 
-        "This is a general knowledge base without specific context. It may only give a broad, less precise answer.";
+    // Ask button logic
+    document.getElementById("askBtn").onclick = async () => {
+      const q1 = document.getElementById("question1").value.trim();
+      const q2 = document.getElementById("question2").value.trim();
+      const context = document.getElementById("context").value.trim();
 
-      const result = await qaPipeline({ question: q, context: passage });
-      if (useContext) {
-        document.getElementById("withContextAns").textContent = result.answer;
-      } else {
-        document.getElementById("noContextAns").textContent = result.answer;
+      if (!qaPipeline) {
+        document.getElementById("output1").textContent = "⚠️ Model is still loading...";
+        document.getElementById("output2").textContent = "⚠️ Model is still loading...";
+        return;
       }
-    }
+
+      // Without context
+      if (q1) {
+        const ans1 = await qaPipeline({ question: q1, context: "" });
+        document.getElementById("output1").textContent = ans1.answer || "No answer found.";
+      }
+
+      // With context
+      if (q2 && context) {
+        const ans2 = await qaPipeline({ question: q2, context });
+        document.getElementById("output2").textContent = ans2.answer || "No answer found.";
+      }
+    };
+
+    // Particles config
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 60 },
+        size: { value: 2 },
+        color: { value: "#ffffff" },
+        line_linked: { enable: true, color: "#ffffff" },
+        move: { speed: 1.5 }
+      },
+      interactivity: {
+        events: { onhover: { enable: true, mode: "repulse" } }
+      }
+    });
   </script>
 </body>
 </html>
