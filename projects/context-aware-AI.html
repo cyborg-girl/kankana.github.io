@@ -49,7 +49,7 @@
   <script>
     particlesJS("particles-js", {
       "particles":{"number":{"value":60},"size":{"value":2},"color":{"value":"#ffffff"},
-      "line_linked":{"enable":true,"color":"#ffffff"},"move":{"speed":1.5}},
+      "line_linked":{"enable":true,"color":"#ffffff"},"move":{"speed":1.5},
       "interactivity":{"events":{"onhover":{"enable":true,"mode":"repulse"}}}
     );
   </script>
@@ -60,7 +60,7 @@
 
     let qaPipeline;
     async function loadModel() {
-      qaPipeline = await pipeline("question-answering", "Xenova/distilbert-base-cased-distilled-squad");
+      qaPipeline = await pipeline("question-answering", "Xenova/distilbert-base-cased-distilled-squad", { quantized: true });
       console.log("QA model loaded");
     }
     loadModel();
