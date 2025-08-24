@@ -2,102 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Context-Aware QA Agent Demo</title>
-<style>
-  body { font-family: "Inter", sans-serif; background:#0d0d0d; color:#fff; margin:0; padding:0; }
-  #particles-js { position:fixed; inset:0; z-index:-1; }
-  h1 { text-align:center; color:#4cc9f0; margin-top:24px; }
-  .wrap { display:flex; justify-content:space-around; padding:40px; flex-wrap:wrap; gap:20px; }
-  .card { background: rgba(29,53,87,0.85); padding:20px; border-radius:16px; max-width:400px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,0.6); }
-  textarea { width:100%; height:80px; margin:8px 0; border-radius:10px; border:none; padding:10px; }
-  button { padding:10px 16px; background:linear-gradient(135deg,#4cc9f0,#4895ef); color:#0b1020; border:none; border-radius:10px; font-weight:700; cursor:pointer; }
-  .status { margin-top:8px; color:#bfc9d9; font-size:0.9rem; }
-  .answer { margin-top:10px; padding:8px; background:rgba(255,255,255,0.08); border-radius:10px; min-height:50px; }
-</style>
-</head>
-<body>
-<div id="particles-js"></div>
-
-<h1>Context-Aware QA Agent Demo</h1>
-<p style="text-align:center; max-width:600px; margin:auto; color:#bfc9d9">
-  This demo shows how the same question can produce different answers depending on whether context is provided or not. The agent uses a small model that runs fully in-browser.
-</p>
-
-<div class="wrap">
-  <div class="card">
-    <h2>No Context</h2>
-    <textarea id="questionNoContext" placeholder="Type your question here..."></textarea>
-    <button id="askNoContext">Ask</button>
-    <div class="status" id="statusNoContext">Loading model...</div>
-    <div class="answer" id="answerNoContext">Waiting for question...</div>
-  </div>
-
-  <div class="card">
-    <h2>With Context</h2>
-    <textarea id="contextInput" placeholder="Provide context here..."></textarea>
-    <textarea id="questionWithContext" placeholder="Type your question here..."></textarea>
-    <button id="askWithContext">Ask</button>
-    <div class="status" id="statusWithContext">Loading model...</div>
-    <div class="answer" id="answerWithContext">Waiting for question...</div>
-  </div>
-</div>
-
 <script type="module">
 import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js';
 
 let qaPipeline = null;
 
-async function loadModel() {
-    document.getElementById('statusNoContext').textContent = "Loading model...";
-    document.getElementById('statusWithContext').textContent = "Loading model...";
-
+async function loadPipeline() {
     try {
-        // initialize the QA pipeline
         qaPipeline = await pipeline('question-answering', 'Xenova/distilbert-base-cased-distilled-squad');
-        document.getElementById('statusNoContext').textContent = "Model loaded ✅";
-        document.getElementById('statusWithContext').textContent = "Model loaded ✅";
-    } catch (e) {
-        console.error(e);
-        document.getElementById('statusNoContext').textContent = "Failed to load model";
-        document.getElementById('statusWithContext').textContent = "Failed to load model";
+        document.getElementById('status').textContent = "Model loaded ✅";
+    } catch (err) {
+        console.error(err);
+        document.getElementById('status').textContent = "Failed to load model";
     }
 }
 
-// Without context
-document.getElementById('askNoContext').addEventListener('click', async () => {
-    const question = document.getElementById('questionNoContext').value.trim();
-    if (!qaPipeline || !question) return;
-    document.getElementById('answerNoContext').textContent = "Processing...";
-    try {
-        const output = await qaPipeline({ question, context: "" });
-        document.getElementById('answerNoContext').textContent = output.answer;
-    } catch (e) {
-        document.getElementById('answerNoContext').textContent = "Error: " + e;
-    }
-});
+async function askQuestion() {
+    const qEl = document.getElementById('question');
+    const cEl = document.getElementById('context');
+    const aEl = document.getElementById('answer');
 
-// With context
-document.getElementById('askWithContext').addEventListener('click', async () => {
-    const question = document.getElementById('questionWithContext').value.trim();
-    const context = document.getElementById('contextInput').value.trim();
-    if (!qaPipeline || !question || !context) return;
-    document.getElementById('answerWithContext').textContent = "Processing...";
+    const question = (qEl.value || "").trim();
+    const context = (cEl.value || "").trim();
+
+    if (!qaPipeline) return alert("Model not loaded yet!");
+    if (!question) return alert("Enter a question.");
+
+    aEl.textContent = "Processing...";
+
     try {
         const output = await qaPipeline({ question, context });
-        document.getElementById('answerWithContext').textContent = output.answer;
-    } catch (e) {
-        document.getElementById('answerWithContext').textContent = "Error: " + e;
+        aEl.textContent = output.answer;
+    } catch (err) {
+        console.error(err);
+        aEl.textContent = "Error: " + err;
     }
-});
+}
 
-window.addEventListener('DOMContentLoaded', loadModel);
-
-// Particles.js
-particlesJS("particles-js", {
-  particles: { number:{value:70}, color:{value:"#4cc9f0"}, shape:{type:"circle"}, opacity:{value:0.6}, size:{value:3}, line_linked:{enable:true,distance:140,color:"#4cc9f0",opacity:0.4,width:1}, move:{enable:true,speed:1}},
-  interactivity:{ events:{ onhover:{ enable:true, mode:"repulse"}}}
-});
+window.addEventListener('DOMContentLoaded', loadPipeline);
 </script>
+</head>
+<body>
+<h1>Context-Aware QA Agent Demo</h1>
+<div id="status">Loading model...</div>
+<textarea id="context" placeholder="Context (optional)"></textarea><br>
+<textarea id="question" placeholder="Your question"></textarea><br>
+<button onclick="askQuestion()">Ask</button>
+<div id="answer" style="margin-top:12px; background:#eee; padding:8px; border-radius:8px;"></div>
 </body>
 </html>
